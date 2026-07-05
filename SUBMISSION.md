@@ -1,98 +1,93 @@
 # Publishing KG Forge as an Obsidian Community Plugin
 
-This guide explains how to turn the local plugin source into a real Obsidian Community Plugin that anyone can install from **Settings → Community plugins → Browse**.
+This guide explains how to publish **Knowledge Forge** so anyone can install it from **Settings → Community plugins → Browse**.
+
+> **Update (2026):** Obsidian no longer accepts plugin submissions via GitHub pull requests to `obsidianmd/obsidian-releases`. Submissions now go through the **Obsidian Community Developer Portal** at https://community.obsidian.md.
 
 ## What you need
 
 - A GitHub account.
 - A public GitHub repository for `obsidian-kg-forge`.
-- A release tag (e.g. `1.0.0`).
+- A GitHub release whose tag matches the `version` in `manifest.json`.
+- An Obsidian account (for the portal).
 
-## Files required for submission
+## Files required for each release
 
-Obsidian's community plugin registry requires three files attached to each GitHub release:
+Obsidian downloads these three files from your GitHub release:
 
 - `main.js` — bundled plugin code
 - `manifest.json` — plugin metadata
-- `styles.css` — plugin styles (can be empty, but must exist)
+- `styles.css` — plugin styles
 
-KG Forge already produces all three when you run `npm run build`.
+KG Forge produces all three when you run `npm run build`.
 
 ## Step-by-step
 
-### 1. Create a GitHub repository
+### 1. Repository (already done)
 
-1. Go to https://github.com/new
-2. Name it `obsidian-kg-forge`.
-3. Make it **public**.
-4. Do **not** initialize it with a README, .gitignore, or license (those files already exist here).
+Source code lives at:
 
-### 2. Push this folder to GitHub
+```
+https://github.com/Jimmycarroll2021/obsidian-kg-forge
+```
 
-Open a terminal in `C:/Users/Jimmy/Documents/00.VECTORS/obsidian-kg-forge` and run:
+### 2. Create a release
+
+Push a tag matching the version in `manifest.json`:
 
 ```bash
-git init
-git add .
-git commit -m "Initial release: KG Forge v1.0.0"
-git branch -M main
-git remote add origin https://github.com/Jimmycarroll2021/obsidian-kg-forge.git
-git push -u origin main
+git tag -a 1.0.1 -m "Release 1.0.1"
+git push origin 1.0.1
 ```
 
-### 3. Create a release
+The included GitHub Action (`.github/workflows/release.yml`) will build and publish the release automatically.
 
-The included GitHub Action (`.github/workflows/release.yml`) will build and draft a release automatically when you push a tag.
+If the workflow ever fails, create the release manually from the built files:
 
 ```bash
-git tag -a 1.0.0 -m "Release 1.0.0"
-git push origin 1.0.0
+npm run build
 ```
 
-After a minute, visit **GitHub → Releases** and publish the draft release.
+Then upload `main.js`, `manifest.json`, and `styles.css` to a new GitHub release.
 
-### 4. Submit to Obsidian
+### 3. Submit through the Obsidian Community Developer Portal
 
-1. Fork https://github.com/obsidianmd/obsidian-releases
-2. Edit `community-plugins.json` and add an entry for KG Forge:
-
-```json
-{
-  "id": "kg-forge",
-  "name": "Knowledge Forge",
-  "author": "Jimmi (Jimmycarroll2021)",
-  "description": "Build a typed knowledge graph from your vault with triples, provenance, GraphRAG prompts, and competency questions.",
-  "repo": "Jimmycarroll2021/obsidian-kg-forge"
-}
-```
-
-3. Open a pull request with the title: `Add KG Forge plugin`.
-4. Wait for Obsidian's review. They typically check that:
-   - `manifest.json` is valid
-   - `main.js` loads without errors
-   - The plugin does not use undocumented/private APIs
-   - The plugin follows the [developer policies](https://docs.obsidian.md/Developer+policies)
-
-### 5. After acceptance
-
-Once the PR is merged, users can find **Knowledge Forge** in Obsidian's community plugin browser.
-
-## Local release package (optional)
-
-If you want to share the plugin manually before publishing, the current build artifacts are:
-
-- `main.js`
-- `manifest.json`
-- `styles.css`
-
-These are also copied to your vault at:
+1. Go to https://community.obsidian.md and sign in with your Obsidian account.
+2. Link your GitHub account if prompted.
+3. Navigate to **Plugins → New plugin**.
+4. Enter the repository URL:
 
 ```
-C:/Users/Jimmy/Documents/00.VECTORS/KnowledgeGraph papers/.obsidian/plugins/kg-forge/
+https://github.com/Jimmycarroll2021/obsidian-kg-forge
 ```
+
+5. Review and agree to the Developer Policies.
+6. Confirm that you will continue supporting the plugin.
+7. Click **Submit**.
+
+### 4. Automated review
+
+After submission, an automated scan checks the plugin. If it reports issues, fix them in the repository, bump the version, create a new release, and update the submission in the portal.
+
+### 5. Human review and publish
+
+Once the automated scan passes, the Obsidian team reviews the plugin. After approval, a bot mirrors it into `obsidianmd/obsidian-releases` and it appears in **Settings → Community plugins → Browse** within 1–2 days.
+
+## Current submission details
+
+Use these values in the portal:
+
+| Field | Value |
+|---|---|
+| Repository URL | `https://github.com/Jimmycarroll2021/obsidian-kg-forge` |
+| Plugin ID | `kg-forge` |
+| Name | `Knowledge Forge` |
+| Author | `Jimmi (Jimmycarroll2021)` |
+| Description | `Build a typed knowledge graph from your vault with triples, provenance, GraphRAG prompts, and competency questions.` |
 
 ## Notes
 
-- Keep `main.js` in `.gitignore`; it is built by CI and attached to releases, not committed to source.
-- Update `manifest.json` and `versions.json` before each release. The included `version-bump.mjs` script handles this when run via `npm version`.
+- Keep `main.js` and `main.js.map` in `.gitignore`; they are built by CI and attached to releases, not committed to source.
+- Update `manifest.json` and `versions.json` before each release.
 - Do not include `node_modules` in the GitHub repository; it is ignored by `.gitignore`.
+- Remove the `kg-forge-1.0.0.tar.gz` archive from the repo if you want a cleaner source tree; it is not needed for submission.
