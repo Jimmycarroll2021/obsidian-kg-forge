@@ -1,7 +1,7 @@
 {
 	"id": "kg-forge",
 	"name": "Knowledge Forge",
-	"version": "1.0.1",
+	"version": "1.0.2",
 	"minAppVersion": "1.13.0",
 	"description": "Build a typed knowledge graph from your vault with triples, provenance, GraphRAG prompts, and competency questions.",
 	"author": "Jimmi (Jimmycarroll2021)",

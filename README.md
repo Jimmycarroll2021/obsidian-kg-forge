@@ -1,8 +1,8 @@
-# Obsidian KG Forge
+# Knowledge Forge
 
 **Plugin ID:** `kg-forge`  
 **Package:** `obsidian-kg-forge`  
-**Author:** KnowledgeForge Community  
+**Author:** Jimmi (Jimmycarroll2021)  
 **License:** MIT
 
 Turn your Obsidian vault into a best-in-class knowledge graph workspace. KG Forge extracts typed **subject-predicate-object triples** from your notes, enforces **provenance** on every fact, and gives you graph-powered tools such as **GraphRAG prompts**, **schema validation**, and **competency-question tracking** — all local-first and offline.
@@ -57,6 +57,18 @@ KG Forge is a **standalone** community plugin with **zero external plugin depend
 
 ---
 
+## Permissions and privacy
+
+KG Forge is local-first and does not send data to remote services. The plugin does request the following capabilities:
+
+- **Vault enumeration:** Commands such as *Validate vault schema*, *Export triples as Cypher*, and *Build GraphRAG prompt* iterate over all markdown files in your vault to extract triples and build the graph. No file contents leave your device.
+- **Vault read/write:** The plugin reads note contents via Obsidian's API and writes cache, report, and export files to the configured cache folder (default `.kg-forge`).
+- **Clipboard access:** The *Build GraphRAG prompt* command copies the generated prompt to your system clipboard when you click **Copy to clipboard**.
+
+No telemetry, analytics, or network requests are performed by the plugin.
+
+---
+
 ## Commands
 
 | Command | What it does |
@@ -99,7 +111,7 @@ The plugin understands the Breadcrumbs edge vocabulary used in the research vaul
 
 ## Compatibility
 
-- **Obsidian:** `0.15.0` and later.
+- **Obsidian:** `1.13.0` and later.
 - **Runtime:** fully local; no network calls are required.
 - **Integrations:** designed to work alongside Dataview, Datacore, Metadata Menu, Juggl, Breadcrumbs, and Infranodus.
 
