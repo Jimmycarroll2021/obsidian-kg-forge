@@ -1,0 +1,11 @@
+{
+	"id": "kg-forge",
+	"name": "Knowledge Forge",
+	"version": "1.0.0",
+	"minAppVersion": "1.13.0",
+	"description": "Standalone community plugin that turns your Obsidian vault into a best-in-class knowledge graph with typed triples, provenance, GraphRAG, and competency questions. Zero external plugin dependencies.",
+	"author": "Jimmi (Jimmycarroll2021)",
+	"authorUrl": "",
+	"fundingUrl": "",
+	"isDesktopOnly": false
+}

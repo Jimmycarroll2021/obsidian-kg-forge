@@ -1,0 +1,7 @@
+{
+  "id": "kg-forge",
+  "name": "Knowledge Forge",
+  "author": "Jimmi (Jimmycarroll2021)",
+  "description": "Standalone community plugin for typed triples, provenance, GraphRAG, and competency questions. Zero external plugin dependencies.",
+  "repo": "Jimmycarroll2021/obsidian-kg-forge"
+}

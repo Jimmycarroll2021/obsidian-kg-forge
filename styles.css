@@ -1,0 +1,119 @@
+/* Knowledge Forge — plugin styles */
+
+.kg-view-title {
+	margin-bottom: 0.5em;
+}
+
+.kg-graph-controls,
+.kg-cq-controls {
+	display: flex;
+	gap: 0.5em;
+	align-items: center;
+	margin-bottom: 0.75em;
+	flex-wrap: wrap;
+}
+
+.kg-button {
+	cursor: pointer;
+}
+
+.kg-filter-label {
+	font-size: var(--font-ui-smaller);
+	color: var(--text-muted);
+}
+
+.kg-filter-select {
+	min-width: 120px;
+}
+
+.kg-graph-content,
+.kg-cq-list {
+	overflow-y: auto;
+}
+
+.kg-empty-state {
+	color: var(--text-muted);
+	font-style: italic;
+	padding: 1em 0;
+}
+
+.kg-triple-list {
+	list-style: none;
+	padding: 0;
+	margin: 0;
+}
+
+.kg-triple-item {
+	padding: 0.35em 0;
+	border-bottom: 1px solid var(--background-modifier-border);
+}
+
+.kg-triple-item.kg-clickable {
+	cursor: pointer;
+}
+
+.kg-triple-item.kg-clickable:hover {
+	background-color: var(--background-modifier-hover);
+}
+
+.kg-node {
+	font-weight: 600;
+}
+
+.kg-predicate {
+	color: var(--text-accent);
+	font-size: var(--font-ui-smaller);
+}
+
+.kg-confidence {
+	color: var(--text-muted);
+	font-size: var(--font-ui-smallest);
+}
+
+.kg-inferred {
+	color: var(--text-warning);
+	font-size: var(--font-ui-smallest);
+	font-style: italic;
+}
+
+.kg-cq-row {
+	display: flex;
+	gap: 0.5em;
+	align-items: center;
+	padding: 0.35em 0;
+	border-bottom: 1px solid var(--background-modifier-border);
+	flex-wrap: wrap;
+}
+
+.kg-cq-input {
+	flex: 1 1 auto;
+	min-width: 200px;
+}
+
+.kg-cq-status {
+	font-size: var(--font-ui-smaller);
+	font-weight: 600;
+	text-transform: uppercase;
+}
+
+.kg-cq-status-unvalidated {
+	color: var(--text-muted);
+}
+
+.kg-cq-status-passing {
+	color: var(--text-success);
+}
+
+.kg-cq-status-failing {
+	color: var(--text-error);
+}
+
+.kg-cq-notes {
+	width: 100%;
+	font-size: var(--font-ui-smaller);
+	color: var(--text-muted);
+}
+
+.kg-cq-remove {
+	padding: 0 0.35em;
+}
