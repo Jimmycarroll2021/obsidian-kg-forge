@@ -1,4 +1,4 @@
-import { Notice, Plugin, TFile } from 'obsidian';
+import { Notice, Plugin, TFile, normalizePath } from 'obsidian';
 import { TripleExtractor } from '../engine/TripleExtractor';
 import { SourceMapLoader } from '../engine/SourceMapLoader';
 import type { ForgeSettings } from '../settings';
@@ -50,7 +50,7 @@ async function extractTriplesFromActiveFile(plugin: PluginWithSettings): Promise
 	const triples = await TripleExtractor.extractFromFile(file, plugin.app, sourceMap, settings);
 
 	// Persist to a per-note cache file for downstream commands and debugging.
-	const cachePath = `${normalizePath(settings.cacheFolder)}/${safeFileName(file.basename)}.triples.json`;
+	const cachePath = normalizePath(`${settings.cacheFolder}/${safeFileName(file.basename)}.triples.json`);
 	const payload = JSON.stringify(
 		{
 			file: file.path,
@@ -64,7 +64,7 @@ async function extractTriplesFromActiveFile(plugin: PluginWithSettings): Promise
 
 	const existing = vault.getAbstractFileByPath(cachePath);
 	if (existing instanceof TFile) {
-		await vault.modify(existing, payload);
+		await vault.process(existing, () => payload);
 	} else {
 		await vault.create(cachePath, payload);
 	}
@@ -77,7 +77,3 @@ function safeFileName(name: string): string {
 	return name.replace(/[\\/:*?"<>|]/g, '_');
 }
 
-/** Collapse redundant slashes and trim trailing slashes. */
-function normalizePath(path: string): string {
-	return path.replace(/\/+/g, '/').replace(/\/$/, '') || '.';
-}

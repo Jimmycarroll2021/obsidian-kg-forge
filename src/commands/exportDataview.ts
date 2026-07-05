@@ -1,4 +1,4 @@
-import { Notice, Plugin, TFile } from 'obsidian';
+import { normalizePath, Notice, Plugin, TFile } from 'obsidian';
 import type { ForgeSettings } from '../settings';
 
 type PluginWithSettings = Plugin & { settings: ForgeSettings };
@@ -83,18 +83,14 @@ async function generateDataviewQueries(plugin: PluginWithSettings): Promise<void
 	}
 
 	const content = lines.join('\n');
-	const outPath = `${normalizePath(settings.cacheFolder)}/dataview-queries.md`;
+	const outPath = normalizePath(`${settings.cacheFolder}/dataview-queries.md`);
 
 	const existing = vault.getAbstractFileByPath(outPath);
 	if (existing instanceof TFile) {
-		await vault.modify(existing, content);
+		await vault.process(existing, () => content);
 	} else {
 		await vault.create(outPath, content);
 	}
 
 	new Notice(`KG Forge: Dataview queries written to ${outPath}`);
-}
-
-function normalizePath(path: string): string {
-	return path.replace(/\/+/g, '/').replace(/\/$/, '') || '.';
 }

@@ -1,4 +1,4 @@
-import { Notice, Plugin, TFile } from 'obsidian';
+import { Notice, normalizePath, Plugin, TFile } from 'obsidian';
 import { SchemaValidator } from '../engine/SchemaValidator';
 import { SourceMapLoader } from '../engine/SourceMapLoader';
 import type { ForgeSettings } from '../settings';
@@ -70,11 +70,11 @@ async function validateVaultSchema(plugin: PluginWithSettings): Promise<void> {
 	}
 
 	const content = lines.join('\n');
-	const reportPath = `${normalizePath(settings.cacheFolder)}/schema-validation-report.md`;
+	const reportPath = normalizePath(`${settings.cacheFolder}/schema-validation-report.md`);
 
 	const existing = vault.getAbstractFileByPath(reportPath);
 	if (existing instanceof TFile) {
-		await vault.modify(existing, content);
+		await vault.process(existing, () => content);
 	} else {
 		await vault.create(reportPath, content);
 	}
@@ -89,8 +89,4 @@ async function validateVaultSchema(plugin: PluginWithSettings): Promise<void> {
 
 	const summary = `${report.errors.length} errors, ${report.warnings.length} warnings`;
 	new Notice(`KG Forge: schema validation complete — ${summary}`);
-}
-
-function normalizePath(path: string): string {
-	return path.replace(/\/+/g, '/').replace(/\/$/, '') || '.';
 }

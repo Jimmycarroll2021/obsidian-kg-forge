@@ -1,4 +1,4 @@
-import { Notice, Plugin, TFile } from 'obsidian';
+import { normalizePath, Notice, Plugin, TFile } from 'obsidian';
 import { TripleExtractor } from '../engine/TripleExtractor';
 import { SourceMapLoader } from '../engine/SourceMapLoader';
 import type { Triple } from '../models/Triple';
@@ -46,11 +46,11 @@ async function exportVaultToCypher(plugin: PluginWithSettings): Promise<void> {
 	}
 
 	const cypher = triplesToCypher(allTriples);
-	const outPath = `${normalizePath(settings.cacheFolder)}/kg-forge-export.cypher`;
+	const outPath = normalizePath(`${settings.cacheFolder}/kg-forge-export.cypher`);
 
 	const existing = vault.getAbstractFileByPath(outPath);
 	if (existing instanceof TFile) {
-		await vault.modify(existing, cypher);
+		await vault.process(existing, () => cypher);
 	} else {
 		await vault.create(outPath, cypher);
 	}
@@ -112,6 +112,4 @@ function sanitizePredicate(input: string): string {
 	return safe || 'RELATED';
 }
 
-function normalizePath(path: string): string {
-	return path.replace(/\/+/g, '/').replace(/\/$/, '') || '.';
-}
+
