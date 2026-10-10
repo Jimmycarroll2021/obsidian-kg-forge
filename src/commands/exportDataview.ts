@@ -1,4 +1,5 @@
-import { normalizePath, Notice, Plugin, TFile } from 'obsidian';
+import { Notice, Plugin } from 'obsidian';
+import { writeGeneratedFile } from '../engine/VaultFiles';
 import type { ForgeSettings } from '../settings';
 
 type PluginWithSettings = Plugin & { settings: ForgeSettings };
@@ -53,7 +54,7 @@ async function generateDataviewQueries(plugin: PluginWithSettings): Promise<void
 			lines.push('  fileClass AS FileClass,');
 			lines.push('  source AS Source,');
 			lines.push('  source_ids AS SourceIDs');
-			lines.push(`FROM "${folder}"`);
+			lines.push(`FROM ${JSON.stringify(folder.replace(/\/$/, ''))}`);
 			lines.push('WHERE fileClass');
 			lines.push('SORT file.name ASC');
 			lines.push('```');
@@ -83,14 +84,7 @@ async function generateDataviewQueries(plugin: PluginWithSettings): Promise<void
 	}
 
 	const content = lines.join('\n');
-	const outPath = normalizePath(`${settings.cacheFolder}/dataview-queries.md`);
+	const output = await writeGeneratedFile(vault, settings.cacheFolder, 'dataview-queries.md', content);
 
-	const existing = vault.getAbstractFileByPath(outPath);
-	if (existing instanceof TFile) {
-		await vault.process(existing, () => content);
-	} else {
-		await vault.create(outPath, content);
-	}
-
-	new Notice(`KG Forge: Dataview queries written to ${outPath}`);
+	new Notice(`KG Forge: Dataview queries written to ${output.path}`);
 }

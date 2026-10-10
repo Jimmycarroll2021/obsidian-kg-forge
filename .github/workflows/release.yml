@@ -19,12 +19,13 @@ jobs:
       - name: Use Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: "20"
+          node-version: "22"
+          cache: "npm"
 
       - name: Build plugin
         run: |
           npm ci
-          npm run build
+          npm run check
 
       - name: Attest build provenance
         uses: actions/attest-build-provenance@v1

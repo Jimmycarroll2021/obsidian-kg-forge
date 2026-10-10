@@ -14,6 +14,7 @@ import { Triple } from '../models/Triple';
 import { SourceMap } from '../models/SourceId';
 import { TripleExtractor } from './TripleExtractor';
 import type { ForgeSettings } from '../settings';
+import { getSourceFiles } from './VaultFiles';
 
 export interface GraphRAGOptions {
 	/** Override the default system prompt. May contain {{facts}} and {{question}}. */
@@ -72,12 +73,36 @@ Facts:
 Question: {{question}}`;
 
 export class GraphRAGBuilder {
-	constructor(private triples: Triple[]) {}
+	private readonly adjacency = new Map<string, Triple[]>();
+	private readonly noteNodes: Set<string>;
+
+	/** Pass scanned vault paths to include real notes that have no outgoing facts. */
+	constructor(triples: Triple[], notePaths?: Iterable<string>) {
+		this.noteNodes = new Set(notePaths ?? triples.map(triple => triple.subject));
+		for (const triple of triples) {
+			this.addAdjacent(triple.subject, triple);
+			// A class label is a fact about a note, not a shared entity to traverse.
+			if (triple.predicate !== 'rdf:type' && triple.object !== triple.subject) {
+				this.addAdjacent(triple.object, triple);
+			}
+		}
+	}
+
+	private addAdjacent(node: string, triple: Triple): void {
+		const adjacent = this.adjacency.get(node) ?? [];
+		adjacent.push(triple);
+		this.adjacency.set(node, adjacent);
+	}
 
 	/**
 	 * Convenience used by commands: extract all vault triples and build a prompt.
 	 */
 	static async buildPrompt(request: GraphRAGPromptRequest): Promise<string> {
+		return (await GraphRAGBuilder.buildFromRequest(request)).prompt;
+	}
+
+	/** Build the prompt and the exact evidence used by command and modal consumers. */
+	static async buildFromRequest(request: GraphRAGPromptRequest): Promise<GraphRAGPrompt> {
 		const { anchor, app, settings, sourceMap, hops, question } = request;
 		const extractor = new TripleExtractor(app.vault, app.metadataCache, {
 			fileClassTypeMap: settings.fileClassMappings,
@@ -85,43 +110,48 @@ export class GraphRAGBuilder {
 		});
 
 		const allTriples: Triple[] = [];
-		for (const file of app.vault.getMarkdownFiles()) {
+		const files = getSourceFiles(app.vault, settings.cacheFolder);
+		for (const file of files) {
 			allTriples.push(...(await extractor.extract(file)));
 		}
 
-		const builder = new GraphRAGBuilder(allTriples);
-		const result = builder.build(anchor.basename, hops, {
+		const builder = new GraphRAGBuilder(allTriples, files.map(file => file.path));
+		return builder.build(anchor.path, hops, {
 			systemPrompt: settings.graphRAGPromptTemplate,
 			question,
 		});
-		return result.prompt;
 	}
 
 	/**
 	 * Build a GraphRAG prompt for an anchor subject.
 	 *
-	 * @param anchor Subject identifier (usually the note basename).
+	 * @param anchor Canonical vault-relative note path.
 	 * @param hops   Number of relationship hops to expand around the anchor.
 	 */
 	build(anchor: string, hops: number, options: GraphRAGOptions = {}): GraphRAGPrompt {
-		const maxFacts = options.maxFacts ?? 500;
-		const evidence = this.collectKHops(anchor, hops).slice(0, maxFacts);
+		const maxFacts = Number.isFinite(options.maxFacts)
+			? Math.max(0, Math.floor(options.maxFacts!)) : 500;
+		const hopCount = Number.isFinite(hops) ? Math.max(0, Math.floor(hops)) : 0;
+		const evidence = this.collectKHops(anchor, hopCount, maxFacts);
 		const facts = evidence.map((t) => t.toBullet());
 		const question = options.question ?? '';
 		const system = options.systemPrompt ?? DEFAULT_SYSTEM_PROMPT;
 
-		let prompt = system
-			.replace(/\{\{facts\}\}/g, facts.join('\n') || '- No facts available.')
-			.replace(/\{\{question\}\}/g, question);
+		const serializedFacts = facts.join('\n') || '- No facts available.';
+		// One substitution pass avoids replacement-string expansion and prevents
+		// question placeholders inside a fact (or facts inside a question) from changing.
+		let prompt = system.replace(/\{\{(facts|question)\}\}/g,
+			(_match, field: string) => field === 'facts' ? serializedFacts : question);
+		if (!system.includes('{{facts}}')) prompt += `\n\nFacts:\n${serializedFacts}`;
 
 		// If the custom template did not explicitly place the question, append it.
-		if (question && !prompt.includes(question)) {
+		if (question && !system.includes('{{question}}')) {
 			prompt += `\n\nQuestion: ${question}`;
 		}
 
 		return {
 			anchor,
-			hops,
+			hops: hopCount,
 			facts,
 			prompt,
 			evidence,
@@ -138,19 +168,17 @@ export class GraphRAGBuilder {
 	/**
 	 * Collect the k-hop undirected neighbourhood of an anchor node.
 	 */
-	private collectKHops(anchor: string, hops: number): Triple[] {
+	private collectKHops(anchor: string, hops: number, maxFacts: number): Triple[] {
+		if (maxFacts === 0) return [];
 		if (hops <= 0) {
 			// Anchor-only: return triples that originate from the anchor.
-			return this.triples.filter((t) => t.subject === anchor);
-		}
-
-		// Build an undirected adjacency index: node -> triples touching it.
-		const adj = new Map<string, Triple[]>();
-		for (const t of this.triples) {
-			if (!adj.has(t.subject)) adj.set(t.subject, []);
-			if (!adj.has(t.object)) adj.set(t.object, []);
-			adj.get(t.subject)!.push(t);
-			adj.get(t.object)!.push(t);
+			const evidence = new Map<string, Triple>();
+			for (const triple of this.adjacency.get(anchor) ?? []) {
+				if (triple.subject !== anchor) continue;
+				evidence.set(triple.id(), triple);
+				if (evidence.size >= maxFacts) break;
+			}
+			return Array.from(evidence.values());
 		}
 
 		const visited = new Set<string>([anchor]);
@@ -160,10 +188,12 @@ export class GraphRAGBuilder {
 		for (let i = 0; i < hops; i++) {
 			const nextFrontier = new Set<string>();
 			for (const node of frontier) {
-				for (const t of adj.get(node) ?? []) {
+				for (const t of this.adjacency.get(node) ?? []) {
 					evidence.set(t.id(), t);
+					if (evidence.size >= maxFacts) return Array.from(evidence.values());
+					if (t.predicate === 'rdf:type') continue;
 					const other = t.subject === node ? t.object : t.subject;
-					if (!visited.has(other)) {
+					if (this.noteNodes.has(other) && !visited.has(other)) {
 						visited.add(other);
 						nextFrontier.add(other);
 					}

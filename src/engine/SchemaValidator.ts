@@ -11,8 +11,10 @@
  */
 
 import { App, MetadataCache, TFile, Vault } from 'obsidian';
-import { SourceMap } from '../models/SourceId';
+import { SourceMap, isValidSourceId } from '../models/SourceId';
 import type { ForgeSettings } from '../settings';
+import { mappedFileClass } from './FolderMapping';
+import { getSourceFiles } from './VaultFiles';
 
 export interface SchemaValidatorOptions {
 	/** folder → expected fileClass, e.g. { algorithms: 'algorithm' } */
@@ -26,6 +28,12 @@ export interface SchemaValidatorOptions {
 
 	/** Optional source map for validating SRC-XXX references. */
 	sourceMap?: SourceMap;
+
+	/** The configured lookup index is not a managed entity note. */
+	sourceMapPath?: string;
+
+	/** Generated Markdown must not become validation input. */
+	cacheFolder?: string;
 }
 
 export type ValidationIssueType =
@@ -34,6 +42,7 @@ export type ValidationIssueType =
 	| 'missing_source_ids'
 	| 'malformed_source_id'
 	| 'unknown_source_id'
+	| 'broken_source_target'
 	| 'missing_provenance';
 
 export interface ValidationIssue {
@@ -50,7 +59,6 @@ export interface ValidationReport {
 }
 
 const DEFAULT_SOURCE_REQUIRED = ['concept', 'algorithm', 'paper', 'book'];
-const SOURCE_ID_RE = /^SRC-[A-Za-z0-9_-]+$/;
 
 export class SchemaValidator {
 	private readonly sourceIdsRequiredFor: Set<string>;
@@ -78,10 +86,12 @@ export class SchemaValidator {
 			fileClassTypeMap: settings.fileClassMappings,
 			provenanceRequired: settings.provenanceEnforced,
 			sourceMap,
+			sourceMapPath: settings.sourceMapPath,
+			cacheFolder: settings.cacheFolder,
 		});
 		const issues = await validator.validateAll();
 		return {
-			scanned: app.vault.getMarkdownFiles().length,
+			scanned: getSourceFiles(app.vault, settings.cacheFolder).length,
 			errors: issues.filter((i) => i.severity === 'error'),
 			warnings: issues.filter((i) => i.severity === 'warning'),
 		};
@@ -92,21 +102,18 @@ export class SchemaValidator {
 	 */
 	async validateFile(file: TFile): Promise<ValidationIssue[]> {
 		if (file.extension !== 'md') return [];
+		if (file.path === (this.options.sourceMapPath ?? 'papers/index.md')) return [];
 
-		const folder = file.path.split('/')[0];
-		const expected = this.options.fileClassTypeMap[folder];
+		const folder = file.parent?.path ?? file.path.slice(0, file.path.lastIndexOf('/'));
+		const expected = mappedFileClass(file.path, this.options.fileClassTypeMap);
 		if (!expected) return []; // Folder is not part of the managed schema.
 
 		const cache = this.metadataCache.getFileCache(file);
 		const fm = cache?.frontmatter ?? {};
 		const fileClass =
-			typeof fm.fileClass === 'string' ? fm.fileClass : undefined;
+			typeof fm.fileClass === 'string' ? fm.fileClass.trim() || undefined : undefined;
 
 		const issues: ValidationIssue[] = [];
-
-		// Special case: the source-map index is a map, not a paper.
-		const isSourceIndex =
-			file.basename === 'index' && fileClass === 'map' && folder === 'papers';
 
 		if (!fileClass) {
 			issues.push({
@@ -115,7 +122,7 @@ export class SchemaValidator {
 				file: file.path,
 				message: `Missing fileClass frontmatter (expected "${expected}" for folder "${folder}").`,
 			});
-		} else if (!isSourceIndex && fileClass !== expected) {
+		} else if (fileClass !== expected) {
 			issues.push({
 				type: 'folder_mismatch',
 				severity: 'warning',
@@ -124,42 +131,49 @@ export class SchemaValidator {
 			});
 		}
 
-		const effectiveClass = isSourceIndex ? 'map' : fileClass;
+		const effectiveClass = fileClass ?? expected;
 
 		// source_ids checks.
-		if (effectiveClass && this.sourceIdsRequiredFor.has(effectiveClass)) {
-			const ids = Array.isArray(fm.source_ids)
-				? fm.source_ids.filter((x): x is string => typeof x === 'string')
-				: [];
-
-			if (ids.length === 0) {
+		const rawIds: unknown[] = Array.isArray(fm.source_ids) ? fm.source_ids : [];
+		const validIds = rawIds.filter(isValidSourceId);
+		if (this.sourceIdsRequiredFor.has(effectiveClass) && rawIds.length === 0) {
+			issues.push({
+				type: 'missing_source_ids',
+				severity: 'error',
+				file: file.path,
+				message: `Notes of type "${effectiveClass}" must declare source_ids.`,
+			});
+		}
+		if (fm.source_ids !== undefined && !Array.isArray(fm.source_ids)) {
+			issues.push({
+				type: 'malformed_source_id', severity: 'error', file: file.path,
+				message: 'source_ids must be an array of SRC-XXX identifiers.',
+			});
+		}
+		for (const id of rawIds) {
+			if (!isValidSourceId(id)) {
 				issues.push({
-					type: 'missing_source_ids',
-					severity: 'error',
-					file: file.path,
-					message: `Notes of type "${effectiveClass}" must declare source_ids.`,
+					type: 'malformed_source_id', severity: 'error', file: file.path,
+					message: `Source id ${JSON.stringify(id)} is malformed (expected SRC-XXX).`,
 				});
-			} else {
-				for (const id of ids) {
-					if (!SOURCE_ID_RE.test(id)) {
-						issues.push({
-							type: 'malformed_source_id',
-							severity: 'error',
-							file: file.path,
-							message: `Source id "${id}" is malformed (expected SRC-XXX).`,
-						});
-					} else if (
-						this.options.sourceMap &&
-						!this.options.sourceMap.has(id)
-					) {
-						issues.push({
-							type: 'unknown_source_id',
-							severity: 'warning',
-							file: file.path,
-							message: `Source id "${id}" is not in the source map.`,
-						});
-					}
-				}
+			} else if (this.options.sourceMap && !this.options.sourceMap.has(id)) {
+				issues.push({
+					type: 'unknown_source_id', severity: 'warning', file: file.path,
+					message: `Source id "${id}" is not in the source map.`,
+				});
+			} else if (this.options.sourceMap?.has(id)) {
+				const target = this.options.sourceMap.get(id)!;
+				const link = target.replace(/^\[\[|\]\]$/g, '').split('|')[0].trim();
+				const linkpath = link.split('#')[0];
+				const context = this.options.sourceMap.sourcePath
+					?? this.options.sourceMapPath ?? file.path;
+				const resolved = linkpath
+					? this.metadataCache.getFirstLinkpathDest(linkpath, context)
+					: link.startsWith('#') ? this.vault.getAbstractFileByPath(context) : null;
+				if (!(resolved instanceof TFile)) issues.push({
+					type: 'broken_source_target', severity: 'warning', file: file.path,
+					message: `Source id "${id}" maps to "${target}", which does not resolve to a note.`,
+				});
 			}
 		}
 
@@ -168,7 +182,7 @@ export class SchemaValidator {
 			this.options.provenanceRequired &&
 			effectiveClass &&
 			this.sourceIdsRequiredFor.has(effectiveClass) &&
-			(!Array.isArray(fm.source_ids) || fm.source_ids.length === 0)
+			validIds.length === 0
 		) {
 			issues.push({
 				type: 'missing_provenance',
@@ -186,7 +200,7 @@ export class SchemaValidator {
 	 */
 	async validateAll(): Promise<ValidationIssue[]> {
 		const all: ValidationIssue[] = [];
-		for (const file of this.vault.getMarkdownFiles()) {
+		for (const file of getSourceFiles(this.vault, this.options.cacheFolder ?? 'Knowledge Forge')) {
 			all.push(...(await this.validateFile(file)));
 		}
 		return all;

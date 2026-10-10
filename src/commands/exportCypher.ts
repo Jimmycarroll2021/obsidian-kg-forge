@@ -1,7 +1,8 @@
-import { normalizePath, Notice, Plugin, TFile } from 'obsidian';
+import { Notice, Plugin } from 'obsidian';
 import { TripleExtractor } from '../engine/TripleExtractor';
 import { SourceMapLoader } from '../engine/SourceMapLoader';
 import type { Triple } from '../models/Triple';
+import { writeGeneratedFile, getSourceFiles } from '../engine/VaultFiles';
 import type { ForgeSettings } from '../settings';
 
 type PluginWithSettings = Plugin & { settings: ForgeSettings };
@@ -37,7 +38,7 @@ async function exportVaultToCypher(plugin: PluginWithSettings): Promise<void> {
 	const vault = plugin.app.vault;
 
 	const sourceMap = await SourceMapLoader.load(vault, settings.sourceMapPath);
-	const files = vault.getMarkdownFiles();
+	const files = getSourceFiles(vault, settings.cacheFolder);
 
 	const allTriples: Triple[] = [];
 	for (const file of files) {
@@ -46,16 +47,9 @@ async function exportVaultToCypher(plugin: PluginWithSettings): Promise<void> {
 	}
 
 	const cypher = triplesToCypher(allTriples);
-	const outPath = normalizePath(`${settings.cacheFolder}/kg-forge-export.cypher`);
+	const output = await writeGeneratedFile(vault, settings.cacheFolder, 'kg-forge-export.cypher', cypher);
 
-	const existing = vault.getAbstractFileByPath(outPath);
-	if (existing instanceof TFile) {
-		await vault.process(existing, () => cypher);
-	} else {
-		await vault.create(outPath, cypher);
-	}
-
-	new Notice(`KG Forge: exported ${allTriples.length} triples to ${outPath}`);
+	new Notice(`KG Forge: exported ${allTriples.length} triples to ${output.path}`);
 }
 
 function triplesToCypher(triples: Triple[]): string {
@@ -89,7 +83,8 @@ function triplesToCypher(triples: Triple[]): string {
 		lines.push(
 			`MERGE (a:Entity {id: '${sId}'}) ` +
 			`MERGE (b:Entity {id: '${oId}'}) ` +
-			`MERGE (a)-[:${relType} {predicate: '${sanitizeLiteral(t.predicate)}', confidence: ${confidence}, source: '${source}', timestamp: ${timestamp}}]->(b);`,
+			`MERGE (a)-[r:${relType} {predicate: '${sanitizeLiteral(t.predicate)}', source: '${source}'}]->(b) ` +
+			`SET r.confidence = ${confidence}, r.timestamp = ${timestamp}, r.inferred = ${t.inferred};`,
 		);
 	}
 
@@ -103,7 +98,7 @@ function nodeId(term: string): string {
 
 /** Escape single quotes and backslashes for Cypher string literals. */
 function sanitizeLiteral(input: string): string {
-	return input.replace(/\\/g, '\\\\').replace(/'/g, "\\'");
+	return input.replace(/\\/g, '\\\\').replace(/'/g, "\\'").replace(/\n/g, '\\n').replace(/\r/g, '\\r');
 }
 
 /** Turn a predicate into a valid Neo4j relationship type (alphanumeric + underscore). */

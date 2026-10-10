@@ -10,7 +10,7 @@
  */
 
 import { Plugin } from 'obsidian';
-import { DEFAULT_SETTINGS, type ForgeSettings } from './settings';
+import { loadForgeSettings, type ForgeSettings } from './settings';
 import { KGForgeSettingsTab } from './ui/SettingsTab';
 import { KnowledgeGraphView } from './ui/KnowledgeGraphView';
 import { CompetencyQuestionView } from './ui/CompetencyQuestionView';
@@ -22,6 +22,7 @@ import {
 
 export default class KGForgePlugin extends Plugin {
 	declare settings: ForgeSettings;
+	private settingsWrite: Promise<void> = Promise.resolve();
 
 	async onload(): Promise<void> {
 		await this.loadSettings();
@@ -68,11 +69,15 @@ export default class KGForgePlugin extends Plugin {
 	}
 
 	async loadSettings(): Promise<void> {
-		this.settings = Object.assign({}, DEFAULT_SETTINGS, await this.loadData()) as ForgeSettings;
+		this.settings = loadForgeSettings(await this.loadData());
 	}
 
 	async saveSettings(): Promise<void> {
-		await this.saveData(this.settings);
+		// Snapshot each edit and preserve save ordering when multiple views edit data.
+		const snapshot = structuredClone(this.settings);
+		const write = this.settingsWrite.catch(() => {}).then(() => this.saveData(snapshot));
+		this.settingsWrite = write;
+		await write;
 	}
 
 	async activateGraphView(): Promise<void> {

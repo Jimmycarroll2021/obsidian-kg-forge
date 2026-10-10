@@ -41,7 +41,7 @@ export class Triple {
 
 	/** Serialise as a single bullet fact (used by GraphRAG prompts). */
 	toBullet(): string {
-		return `- (${this.subject}) → ${this.predicate} → (${this.object})`;
+		return `- (${this.subject}) → ${this.predicate} → (${this.object}) [source: ${this.provenance.source}]`;
 	}
 
 	/**
@@ -49,13 +49,19 @@ export class Triple {
 	 * Labels can be supplied via the optional mapping.
 	 */
 	toCypherMerge(labels?: Record<string, string>): string {
-		const escape = (s: string) => s.replace(/"/g, '\\"');
-		const sLabel = labels?.[this.subject] ?? 'Node';
-		const oLabel = labels?.[this.object] ?? 'Node';
+		const validateLabel = (label: string) => {
+			if (!/^[A-Za-z_][A-Za-z0-9_]*$/.test(label)) {
+				throw new Error(`Invalid Cypher label ${JSON.stringify(label)}. Use letters, numbers and underscores, starting with a letter or underscore.`);
+			}
+			return label;
+		};
+		const sLabel = validateLabel(labels?.[this.subject] ?? 'Node');
+		const oLabel = validateLabel(labels?.[this.object] ?? 'Node');
 		const rel = this.predicate.replace(/[^a-zA-Z0-9_]/g, '_').toUpperCase();
+		validateLabel(rel);
 		return [
-			`MERGE (a:${sLabel} {id: "${escape(this.subject)}"})`,
-			`MERGE (b:${oLabel} {id: "${escape(this.object)}"})`,
+			`MERGE (a:${sLabel} {id: ${JSON.stringify(this.subject)}})`,
+			`MERGE (b:${oLabel} {id: ${JSON.stringify(this.object)}})`,
 			`MERGE (a)-[:${rel}]->(b);`,
 		].join('\n');
 	}

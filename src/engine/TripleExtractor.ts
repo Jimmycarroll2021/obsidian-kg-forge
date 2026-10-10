@@ -15,6 +15,7 @@ import { Triple, mergeDuplicates } from '../models/Triple';
 import { Provenance, createProvenance } from '../models/Provenance';
 import { SourceMap, isValidSourceId } from '../models/SourceId';
 import type { ForgeSettings } from '../settings';
+import { mappedFileClass } from './FolderMapping';
 
 export interface TripleExtractorOptions {
 	/** folder name → expected fileClass / node type, e.g. algorithms → algorithm */
@@ -69,7 +70,7 @@ export class TripleExtractor {
 	async extract(file: TFile): Promise<Triple[]> {
 		const cache = this.metadataCache.getFileCache(file);
 		const content = await this.vault.cachedRead(file);
-		const subject = file.basename;
+		const subject = file.path;
 		const baseProv = createProvenance(file.path, {
 			confidence: 0.9,
 			lineage: [file.path],
@@ -78,19 +79,25 @@ export class TripleExtractor {
 		const triples: Triple[] = [];
 
 		// 1. Frontmatter-derived triples.
-		if (cache?.frontmatter) {
-			triples.push(...this.extractFrontmatterTriples(subject, cache.frontmatter, baseProv));
+		const frontmatter = cache?.frontmatter ?? {};
+		triples.push(...this.extractFrontmatterTriples(subject, frontmatter, baseProv));
+		if (typeof frontmatter.fileClass !== 'string' || !frontmatter.fileClass.trim()) {
+			const type = mappedFileClass(file.path, this.fileClassTypeMap);
+			if (type) triples.push(new Triple(subject, 'rdf:type', type,
+				createProvenance(file.path, {
+					confidence: 0.85,
+					lineage: [file.path, 'inferred:folder-mapping'],
+				}), true));
 		}
 
 		// 2. Breadcrumbs inline fields in the Connections section.
-		const connections = parseConnectionsSection(content);
+		const prose = stripInlineCode(stripCodeFences(stripFrontmatter(content)));
+		const connections = parseConnectionsSection(prose);
 		triples.push(...this.extractConnectionTriples(subject, connections, baseProv));
 
 		// 3. Body wikilinks (exclude code fences, frontmatter and the
 		//    Connections section so explicit breadcrumbs are not duplicated).
-		const bodyText = removeConnectionsSection(
-			stripCodeFences(stripFrontmatter(content))
-		);
+		const bodyText = removeConnectionsSection(prose);
 		triples.push(...this.extractBodyLinkTriples(subject, bodyText, baseProv));
 
 		return mergeDuplicates(triples);
@@ -117,12 +124,24 @@ export class TripleExtractor {
 	 * Resolve a raw source value to a note identifier.
 	 * If it looks like a SRC id and is in the source map, return the map target.
 	 */
-	resolveSource(value: string): string {
+	resolveSource(value: string, sourcePath = ''): string {
 		const trimmed = value.trim();
 		if (isValidSourceId(trimmed) && this.options.sourceMap?.has(trimmed)) {
-			return this.options.sourceMap.get(trimmed)!;
+			return this.resolveLink(this.options.sourceMap.get(trimmed)!,
+				this.options.sourceMap.sourcePath ?? sourcePath);
 		}
-		return trimmed;
+		return isValidSourceId(trimmed) ? trimmed : this.resolveLink(trimmed, sourcePath);
+	}
+
+	/** Resolve a note link in its owning note's context, preserving missing targets. */
+	private resolveLink(value: string, sourcePath: string): string {
+		const trimmed = value.trim();
+		const link = trimmed.startsWith('[[') && trimmed.endsWith(']]')
+			? trimmed.slice(2, -2) : trimmed;
+		const target = link.split('|')[0].trim();
+		const path = target.split('#')[0];
+		if (!path && target.startsWith('#')) return sourcePath || target;
+		return this.metadataCache.getFirstLinkpathDest(path, sourcePath)?.path ?? target;
 	}
 
 	private extractFrontmatterTriples(
@@ -133,12 +152,12 @@ export class TripleExtractor {
 		const out: Triple[] = [];
 
 		// fileClass → rdf:type edge.
-		if (typeof frontmatter.fileClass === 'string') {
+		if (typeof frontmatter.fileClass === 'string' && frontmatter.fileClass.trim()) {
 			out.push(
 				new Triple(
 					subject,
 					'rdf:type',
-					frontmatter.fileClass,
+					frontmatter.fileClass.trim(),
 					createProvenance(baseProv.source, {
 						confidence: 1.0,
 						lineage: [...baseProv.lineage, 'frontmatter:fileClass'],
@@ -151,7 +170,8 @@ export class TripleExtractor {
 		if (Array.isArray(frontmatter.source_ids)) {
 			for (const raw of frontmatter.source_ids) {
 				if (typeof raw !== 'string') continue;
-				const resolved = this.resolveSource(raw);
+				if (!raw.trim()) continue;
+				const resolved = this.resolveSource(raw, baseProv.source);
 				out.push(
 					new Triple(
 						subject,
@@ -177,7 +197,8 @@ export class TripleExtractor {
 		const out: Triple[] = [];
 		for (const [field, values] of Object.entries(connections)) {
 			for (const raw of values) {
-				const object = field === 'source' ? this.resolveSource(raw) : raw;
+				const object = field === 'source'
+					? this.resolveSource(raw, baseProv.source) : this.resolveLink(raw, baseProv.source);
 				out.push(
 					new Triple(
 						subject,
@@ -202,7 +223,8 @@ export class TripleExtractor {
 		const targets = extractWikilinks(bodyText);
 		const seen = new Set<string>();
 		const out: Triple[] = [];
-		for (const target of targets) {
+		for (const raw of targets) {
+			const target = this.resolveLink(raw, baseProv.source);
 			if (seen.has(target)) continue;
 			seen.add(target);
 			out.push(
@@ -267,23 +289,41 @@ function extractWikilinks(text: string): string[] {
 function extractValues(raw: string): string[] {
 	const text = raw.trim();
 	if (!text) return [];
-	if (text.includes('[[')) {
-		return extractWikilinks(text);
-	}
-	return text
+	const links = extractWikilinks(text);
+	const values = text.replace(/\[\[.*?\]\]/g, '')
 		.split(MULTI_VALUE_SEP)
 		.map((s) => s.trim())
 		.filter((s) => s.length > 0);
+	return links.concat(values);
 }
 
 /** Remove fenced code blocks so we do not extract links from examples. */
 function stripCodeFences(text: string): string {
-	return text.replace(/```[\s\S]*?```/g, '');
+	let fence: { marker: string; length: number } | undefined;
+	return text.split('\n').map((line) => {
+		const delimiter = /^ {0,3}(`{3,}|~{3,})(.*)$/.exec(line);
+		if (fence) {
+			if (delimiter && delimiter[1][0] === fence.marker
+				&& delimiter[1].length >= fence.length && !delimiter[2].trim()) fence = undefined;
+			return '';
+		}
+		if (delimiter) {
+			fence = { marker: delimiter[1][0], length: delimiter[1].length };
+			return '';
+		}
+		return line;
+	}).join('\n');
+}
+
+/** Backtick spans may use any matching run length and can cross line breaks. */
+function stripInlineCode(text: string): string {
+	return text.replace(/(?<!`)(`+)(?!`)([\s\S]*?)(?<!`)\1(?!`)/g,
+		(span) => span.replace(/[^\n]/g, ' '));
 }
 
 /** Remove the YAML frontmatter block at the top of a note. */
 function stripFrontmatter(text: string): string {
-	return text.replace(/^---\r?\n[\s\S]*?\r?\n---\r?\n/, '');
+	return text.replace(/^---\r?\n[\s\S]*?\r?\n---(?:\r?\n|$)/, '');
 }
 
 /** Remove the Connections section so its explicit links are not re-inferred. */

@@ -26,15 +26,14 @@ export class SourceMapLoader {
 	/**
 	 * Read the configured source-map note and parse its table.
 	 *
-	 * Throws if the file cannot be found or read.
+	 * An absent optional index produces an empty map. Genuine read errors surface.
 	 */
 	async load(): Promise<SourceMap> {
 		const abstract = this.vault.getAbstractFileByPath(this.path);
-		if (!abstract || !(abstract instanceof TFile)) {
-			throw new Error(`Source map not found at "${this.path}".`);
-		}
+		if (!abstract) return parseSourceMap('', this.path);
+		if (!(abstract instanceof TFile)) throw new Error(`Source map path "${this.path}" is not a note.`);
 		const content = await this.vault.cachedRead(abstract);
-		return parseSourceMap(content);
+		return parseSourceMap(content, abstract.path);
 	}
 
 	/**

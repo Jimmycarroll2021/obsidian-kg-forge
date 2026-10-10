@@ -5,7 +5,16 @@
  * surface shared by commands, the triple engine, and the UI.
  */
 
+export interface CompetencyQuestion {
+	id: string;
+	question: string;
+	status: 'unvalidated' | 'covered' | 'uncovered';
+	notes?: string;
+}
+
 export interface ForgeSettings {
+	/** User questions persist with plugin settings, never in a temporary view. */
+	competencyQuestions: CompetencyQuestion[];
 	/** Require source/confidence/timestamp signals on extracted triples. */
 	provenanceEnforced: boolean;
 
@@ -26,6 +35,7 @@ export interface ForgeSettings {
 }
 
 export const DEFAULT_SETTINGS: ForgeSettings = {
+	competencyQuestions: [],
 	provenanceEnforced: true,
 	defaultHopCount: 2,
 	graphRAGPromptTemplate: `You are a knowledge-graph assistant. Answer the question using ONLY the facts listed below.
@@ -42,5 +52,25 @@ Question: {{question}}`,
 		concepts: 'concept',
 		papers: 'paper',
 	},
-	cacheFolder: '.kg-forge',
+	cacheFolder: 'Knowledge Forge',
 };
+
+/** Clone mutable defaults and migrate old question verdicts to coverage hints. */
+export function loadForgeSettings(data: unknown): ForgeSettings {
+	const saved = data && typeof data === 'object' ? data as Partial<ForgeSettings> : {};
+	const questions = Array.isArray(saved.competencyQuestions) ? saved.competencyQuestions : [];
+	return {
+		...DEFAULT_SETTINGS,
+		...saved,
+		cacheFolder: saved.cacheFolder === '.kg-forge' ? DEFAULT_SETTINGS.cacheFolder : saved.cacheFolder ?? DEFAULT_SETTINGS.cacheFolder,
+		defaultHopCount: typeof saved.defaultHopCount === 'number' && Number.isFinite(saved.defaultHopCount)
+			? Math.max(0, Math.min(5, Math.round(saved.defaultHopCount))) : DEFAULT_SETTINGS.defaultHopCount,
+		fileClassMappings: { ...(saved.fileClassMappings ?? DEFAULT_SETTINGS.fileClassMappings) },
+		competencyQuestions: questions.filter(q => q && typeof q.id === 'string' && typeof q.question === 'string')
+			.map(q => ({
+				id: q.id, question: q.question,
+				status: q.status === 'covered' || q.status === 'uncovered' ? q.status : 'unvalidated',
+				...(typeof q.notes === 'string' ? { notes: q.notes } : {}),
+			})),
+	};
+}

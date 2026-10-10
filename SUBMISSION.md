@@ -19,7 +19,7 @@ Obsidian downloads these three files from your GitHub release:
 - `manifest.json` — plugin metadata
 - `styles.css` — plugin styles
 
-KG Forge produces all three when you run `npm run build`.
+The build produces `main.js`; include the maintained `manifest.json` and `styles.css` alongside it. Run `npm run check` and the native sample-vault walkthrough before an authorised release.
 
 ## Step-by-step
 
@@ -36,8 +36,9 @@ https://github.com/Jimmycarroll2021/obsidian-kg-forge
 Push a tag matching the version in `manifest.json`:
 
 ```bash
-git tag -a 1.0.1 -m "Release 1.0.1"
-git push origin 1.0.1
+# Replace X.Y.Z with the tested manifest version.
+git tag -a X.Y.Z -m "Release X.Y.Z"
+git push origin X.Y.Z
 ```
 
 The included GitHub Action (`.github/workflows/release.yml`) will build and publish the release automatically.
@@ -45,10 +46,10 @@ The included GitHub Action (`.github/workflows/release.yml`) will build and publ
 If the workflow ever fails, create the release manually from the built files:
 
 ```bash
-npm run build
+npm run check
 ```
 
-Then upload `main.js`, `manifest.json`, and `styles.css` to a new GitHub release.
+Resolve the workflow failure before publishing. Then upload `main.js`, `manifest.json`, and `styles.css` to a new GitHub release.
 
 ### 3. Submit through the Obsidian Community Developer Portal
 
@@ -71,7 +72,7 @@ After submission, an automated scan checks the plugin. If it reports issues, fix
 
 ### 5. Human review and publish
 
-Once the automated scan passes, the Obsidian team reviews the plugin. After approval, a bot mirrors it into `obsidianmd/obsidian-releases` and it appears in **Settings → Community plugins → Browse** within 1–2 days.
+Follow the directory's review feedback and publication controls. No publication timeline is guaranteed here. The current process is described in the [official submission guide](https://docs.obsidian.md/plugins/releasing/submit-plugin).
 
 ## Current submission details
 
