@@ -1,5 +1,5 @@
 {
-  "status": "internal-pass-native-final-pending",
+  "status": "PASS",
   "series": 1,
   "sourceBaseline": "c4596bd47bba3051e44ee4e79f9ab6a59161911e",
   "productIdentitySha256": "17dcc2ec120cdf5fca80cd30f1cb744db07dbb9dba75a79cceb6aba273e0cbf3",
@@ -74,5 +74,49 @@
     "Synthetic projection timing is not native latency",
     "Category leadership has not been benchmarked",
     "Native mobile/otherOS and Neo4j execution unverified"
-  ]
+  ],
+  "productCommit": "06b6aeb755b0296641313586ae2c2583fc105ad1",
+  "committedBuildReplay": {
+    "sourceCommit": "06b6aeb755b0296641313586ae2c2583fc105ad1",
+    "directory": "/tmp/forge-build-replay-nxwm30h1",
+    "runtimeHashes": {
+      "main.js": "2b18a3484415e06fc1fe2ac4e0c4db985f85cc37ff9cbae3085e1521275068de",
+      "styles.css": "aaef17d2e7cc149a95da475c1198de667f8e6726a2fb186957d0bcd85d17162c",
+      "manifest.json": "1fc6b859f2a98e69c5babba3ac861939d8a32e913230e67130840dcd5f16dd60"
+    },
+    "matchesNativeFrozenBundle": true,
+    "scope": "Fresh Git archive product build using installed lockfile dependencies; no additional test run"
+  },
+  "nativeFinal": {
+    "record": "native-final.json",
+    "receiptSha256": "9d3f0c19570f9f465138c107eddfb0df870315d673e44eec2d9f097d9295b346",
+    "host": {
+      "version": "1.14.4",
+      "electron": "43.7.7",
+      "chrome": "150.0.7871.250",
+      "release": "https://github.com/obsidianmd/obsidian-releases/releases/tag/v1.14.4",
+      "asset_sha256": "e70b7cd63787e7f798a84fec453f5c446b91877bd3f612e8fb98e9b76cc81120",
+      "mode": "Genuine native Linux Obsidian on owned Xvfb software display"
+    },
+    "checks": {
+      "original_workflows": {
+        "passed": 14,
+        "total": 14
+      },
+      "separate_extension": {
+        "passed": 14,
+        "total": 14
+      },
+      "frozen_native_product": {
+        "passed": 2,
+        "total": 2
+      }
+    },
+    "runtimeHashes": {
+      "main.js": "2b18a3484415e06fc1fe2ac4e0c4db985f85cc37ff9cbae3085e1521275068de",
+      "styles.css": "aaef17d2e7cc149a95da475c1198de667f8e6726a2fb186957d0bcd85d17162c",
+      "manifest.json": "1fc6b859f2a98e69c5babba3ac861939d8a32e913230e67130840dcd5f16dd60"
+    },
+    "cleanupVerified": true
+  }
 }

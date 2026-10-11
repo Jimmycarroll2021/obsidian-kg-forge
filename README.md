@@ -90,9 +90,9 @@ Run **Open knowledge graph** with a source note active. The map starts with expl
 
 Search for a neighbour or choose a predicate to narrow the map. Select a card with the mouse or keyboard to inspect its provenance; evidence is paged separately at eight facts per page. **Centre in graph** explores that exact neighbour while keeping the editor on its current note. **Graph back** and **Graph forward** restore search, predicate, visibility, paging and selected evidence through up to 50 history entries. Exploration pins the map; enable **Follow active note** to return to the editor. **Open note** opens the exact target in the editor. Unresolved targets are marked and keep both actions disabled. Duplicate note names retain their folder context. The layout stacks in narrow panes and follows the Obsidian theme.
 
-![Focused active-note relationship map](docs/images/focused-graph.png)
+![Focused knowledge graph in native Obsidian](docs/images/native-graph.png)
 
-*Actual plugin rendering in a browser fixture with synthetic notes and a mocked Obsidian host.*
+*Actual bundled plugin in native Obsidian 1.14.4, using a disposable synthetic vault and a 300px dark pane. [Full native window](docs/images/native-graph-window.png) · [Graph navigation](docs/images/native-graph-navigation.png).*
 
 The map reads its anchor, the configured source index and up to **100 indexed referring notes initially**. Obsidian’s resolved-link index supplies the candidate paths; only extracted relationships to the anchor enter the map. **Load more incoming notes** extends the limit by 100. Changed notes invalidate cached extraction, and the status reports unreadable notes as a partial map. It enumerates note paths without reading unrelated vault contents. Plain source IDs without native note links are outside this incoming index, so the status reports indexed notes rather than claiming a complete semantic graph. For a broader multi-hop neighbourhood in a prompt, use the GraphRAG command.
 

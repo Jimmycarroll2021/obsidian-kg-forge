@@ -1,0 +1,386 @@
+{
+  "kind": "native_candidate03_final_acceptance",
+  "recorded_at": "2026-10-11T01:11:29.104343+00:00",
+  "product_source_commit": "06b6aeb755b0296641313586ae2c2583fc105ad1",
+  "product_source_identity_sha256": "17dcc2ec120cdf5fca80cd30f1cb744db07dbb9dba75a79cceb6aba273e0cbf3",
+  "runtime_sha256": {
+    "main.js": "2b18a3484415e06fc1fe2ac4e0c4db985f85cc37ff9cbae3085e1521275068de",
+    "styles.css": "aaef17d2e7cc149a95da475c1198de667f8e6726a2fb186957d0bcd85d17162c",
+    "manifest.json": "1fc6b859f2a98e69c5babba3ac861939d8a32e913230e67130840dcd5f16dd60"
+  },
+  "host": {
+    "version": "1.14.4",
+    "electron": "43.7.7",
+    "chrome": "150.0.7871.250",
+    "release": "https://github.com/obsidianmd/obsidian-releases/releases/tag/v1.14.4",
+    "asset_sha256": "e70b7cd63787e7f798a84fec453f5c446b91877bd3f612e8fb98e9b76cc81120",
+    "mode": "Genuine native Linux Obsidian on owned Xvfb software display"
+  },
+  "status": "PASS",
+  "checks": {
+    "original_workflows": {
+      "passed": 14,
+      "total": 14
+    },
+    "separate_extension": {
+      "passed": 14,
+      "total": 14
+    },
+    "frozen_native_product": {
+      "passed": 2,
+      "total": 2
+    },
+    "unique_workflow_extension_checks": {
+      "genuine_native_plugin_load": {
+        "pass": true,
+        "evidence_result": "/tmp/forge-native-accepted-guwffi82/native-continuation-02-results.json"
+      },
+      "quiet_default_graph": {
+        "pass": true,
+        "evidence_result": "/tmp/forge-native-accepted-guwffi82/native-extended-results.json"
+      },
+      "native_sidebar_has_no_horizontal_overflow": {
+        "pass": true,
+        "evidence_result": "/tmp/forge-native-accepted-guwffi82/native-extended-results.json"
+      },
+      "selected_provenance_visible": {
+        "pass": true,
+        "evidence_result": "/tmp/forge-native-accepted-guwffi82/native-extended-results.json"
+      },
+      "source_toggle_separate_identity": {
+        "pass": true,
+        "evidence_result": "/tmp/forge-native-accepted-guwffi82/native-extended-results.json"
+      },
+      "inferred_toggle_resolved_path": {
+        "pass": true,
+        "evidence_result": "/tmp/forge-native-accepted-guwffi82/native-extended-results.json"
+      },
+      "open_exact_note": {
+        "pass": true,
+        "evidence_result": "/tmp/forge-native-accepted-guwffi82/native-extended-results.json"
+      },
+      "native_grounded_prompt": {
+        "pass": true,
+        "evidence_result": "/tmp/forge-native-accepted-guwffi82/native-extended-results.json"
+      },
+      "native_clipboard_exact_preview": {
+        "pass": true,
+        "evidence_result": "/tmp/forge-native-accepted-guwffi82/native-extended-results.json"
+      },
+      "native_stale_copy_disabled": {
+        "pass": true,
+        "evidence_result": "/tmp/forge-native-accepted-guwffi82/native-extended-results.json"
+      },
+      "native_distinct_basename_caches": {
+        "pass": true,
+        "evidence_result": "/tmp/forge-native-accepted-guwffi82/native-extended-results.json"
+      },
+      "native_validation_report": {
+        "pass": true,
+        "evidence_result": "/tmp/forge-native-accepted-guwffi82/native-extended-results.json"
+      },
+      "native_question_persistence": {
+        "pass": true,
+        "evidence_result": "/tmp/forge-native-accepted-guwffi82/native-extended-results.json"
+      },
+      "native_question_cold_plugin_reload": {
+        "pass": true,
+        "evidence_result": "/tmp/forge-native-accepted-guwffi82/native-extended-results.json"
+      },
+      "native_300px_dark_pane_no_overflow": {
+        "pass": true,
+        "evidence_result": "/tmp/forge-native-accepted-guwffi82/native-extended-results.json"
+      },
+      "native_keyboard_centre_without_editor_change": {
+        "pass": true,
+        "evidence_result": "/tmp/forge-native-accepted-guwffi82/native-extended-results.json"
+      },
+      "native_keyboard_back_restores_search_selection": {
+        "pass": true,
+        "evidence_result": "/tmp/forge-native-accepted-guwffi82/native-extended-results.json"
+      },
+      "native_keyboard_forward_keeps_focus": {
+        "pass": true,
+        "evidence_result": "/tmp/forge-native-accepted-guwffi82/native-extended-results.json"
+      },
+      "native_exhausted_incoming_button_hidden": {
+        "pass": true,
+        "evidence_result": "/tmp/forge-native-accepted-guwffi82/native-continuation-02-results.json"
+      },
+      "native_live_backlink_removal": {
+        "pass": true,
+        "evidence_result": "/tmp/forge-native-accepted-guwffi82/native-continuation-02-results.json"
+      },
+      "native_new_backlink_resolve": {
+        "pass": true,
+        "evidence_result": "/tmp/forge-native-accepted-guwffi82/native-continuation-02-results.json"
+      },
+      "native_pin_ignores_editor_change": {
+        "pass": true,
+        "evidence_result": "/tmp/forge-native-accepted-guwffi82/native-continuation-02-results.json"
+      },
+      "native_explicit_resume_following": {
+        "pass": true,
+        "evidence_result": "/tmp/forge-native-accepted-guwffi82/native-continuation-02-results.json"
+      },
+      "native_balanced_markdown_target": {
+        "pass": true,
+        "evidence_result": "/tmp/forge-native-accepted-guwffi82/native-continuation-02-results.json"
+      },
+      "native_literal_examples_suppressed_real_after_code_survives": {
+        "pass": true,
+        "evidence_result": "/tmp/forge-native-accepted-guwffi82/native-continuation-02-results.json"
+      },
+      "native_folder_rename_preserves_pinned_child": {
+        "pass": true,
+        "evidence_result": "/tmp/forge-native-accepted-guwffi82/native-continuation-02-results.json"
+      },
+      "native_105_incoming_initial_cap_and_visible_expansion": {
+        "pass": true,
+        "evidence_result": "/tmp/forge-native-accepted-guwffi82/native-continuation-02-results.json"
+      },
+      "native_105_incoming_exhausted_expansion_hidden": {
+        "pass": true,
+        "evidence_result": "/tmp/forge-native-accepted-guwffi82/native-continuation-02-results.json"
+      }
+    }
+  },
+  "ready_host_prompt_opens": [
+    {
+      "activeFile": "concepts/Graph.md",
+      "activeView": "markdown",
+      "layoutReady": true,
+      "activeWindowSame": true,
+      "activeWindowUrl": "app://obsidian.md/index.html",
+      "windowFocused": true,
+      "returned": true,
+      "immediatePanels": 1
+    },
+    {
+      "activeFile": "concepts/Graph.md",
+      "activeView": "markdown",
+      "layoutReady": true,
+      "activeWindowSame": true,
+      "activeWindowUrl": "app://obsidian.md/index.html",
+      "returned": true,
+      "immediatePanels": 1
+    }
+  ],
+  "additional_cold_continuation_prompt_open": {
+    "activeFile": "concepts/Graph.md",
+    "activeView": "markdown",
+    "layoutReady": true,
+    "activeWindowSame": true,
+    "activeWindowUrl": "app://obsidian.md/index.html",
+    "returned": true,
+    "immediatePanels": 1
+  },
+  "input_integrity": {
+    "frozen_nine_notes_unchanged": true,
+    "original_six_notes_unchanged": true,
+    "frozen_runner_identical_to_baseline": true,
+    "original14_runner_adaptations": [
+      "Quiet-default expectation accepts the two canonical explicit neighbour notes because actual incoming now adds algorithms/Shortest path.md. Unselected provenance remains absent.",
+      "Select concepts/Traversal.md by exact canonical ID because the native map now has more than one neighbour.",
+      "Use a separate cloned profile, reset only clone plugin data/workspace for the original single-question workflow; baseline artifacts unchanged.",
+      "Add extension fixtures only after the original14 checks, so the six-file validation assertion remains the same.",
+      "Await actual workspace.onLayoutReady and native dark theme. Separate prompt editor readiness from command dispatch; record dispatch and immediate modal DOM."
+    ]
+  },
+  "native_folder_event_receipt": {
+    "events": [
+      {
+        "path": "native-extension/renamed-folder",
+        "oldPath": "native-extension/folder",
+        "kind": "t",
+        "childPaths": [],
+        "graphFocus": "native-extension/folder/B.md"
+      },
+      {
+        "path": "native-extension/renamed-folder/A.md",
+        "oldPath": "native-extension/folder/A.md",
+        "kind": "t",
+        "childPaths": [
+          "native-extension/renamed-folder/A.md"
+        ],
+        "graphFocus": "native-extension/folder/B.md"
+      },
+      {
+        "path": "native-extension/renamed-folder/B.md",
+        "oldPath": "native-extension/folder/B.md",
+        "kind": "t",
+        "childPaths": [
+          "native-extension/renamed-folder/B.md",
+          "native-extension/renamed-folder/A.md"
+        ],
+        "graphFocus": "native-extension/folder/B.md"
+      }
+    ],
+    "focus": "native-extension/renamed-folder/B.md",
+    "status": "native-extension/renamed-folder/B.md \u00b7 Incoming: 1 of 1 indexed notes loaded",
+    "editor": "native-extension/renamed-folder/A.md",
+    "newChildExists": true
+  },
+  "native_parser_cache": [
+    {
+      "link": "Real",
+      "original": "[[Real]]",
+      "displayText": "Real",
+      "position": {
+        "start": {
+          "line": 7,
+          "col": 0,
+          "offset": 102
+        },
+        "end": {
+          "line": 7,
+          "col": 8,
+          "offset": 110
+        }
+      }
+    },
+    {
+      "link": "Paper_(draft).md",
+      "original": "[read](Paper_(draft).md)",
+      "displayText": "read",
+      "position": {
+        "start": {
+          "line": 9,
+          "col": 11,
+          "offset": 137
+        },
+        "end": {
+          "line": 9,
+          "col": 35,
+          "offset": 161
+        }
+      }
+    }
+  ],
+  "host_errors": {
+    "native-extended-results.json": {
+      "page_errors": [],
+      "plugin_errors": []
+    },
+    "native-continuation-02-results.json": {
+      "page_errors": [],
+      "plugin_errors": []
+    },
+    "native-product-results.json": {
+      "page_errors": [],
+      "plugin_errors": []
+    }
+  },
+  "window_routing_diagnostic": {
+    "finding": "Native Modal opened in owned Settings about:blank popout; panel was connected there, not in the app:// viewport initially inspected. Native isOpen differs from plugin opened, no shadowing proved.",
+    "proof": "/tmp/forge-native-modal-owner-diagnostic-p0_21f_x/modal-inspect-results.json",
+    "settings_popouts_closed": [
+      {
+        "title": "Settings - vault - Obsidian 1.14.4",
+        "url": "about:blank",
+        "appPresent": false,
+        "text": "Settings - vault - Obsidian 1.14.4\nOptions\nGeneral\nAppearance\nInterface\nEditor\nFiles and links\nHotkeys\nKeychain\nCore plugins\nCommunity plugins\nCore plugins\nBacklinks\nCanvas\nCommand palette\nDaily notes\nFile recovery\nNote composer\nPage preview\nQuick switcher\nSync\nTemplates\nCommunity plugins\nKnowledge Forge\nRestricted mode\nTurn on Restricted mode to use the app without community plugins.\nTurn on and reload\nCommunity plugins\nBrowse and install community plugins made by the community.\nBrowse\nCurrent plugins\nYou currently have 1 plugin installed.\nCheck for updates\nAutomatically check for plugin updates\nPeriodically check for plugin updates.\nInstalled plugins\nKnowledge Forge v1.0.2 By Jimmi (Jimmycarroll2021)\nBuild a typed knowledge graph from your vault with triples, provenance, GraphRAG prompts, and competency questions.",
+        "openerVault": "/tmp/forge-native-accepted-guwffi82/vault"
+      }
+    ],
+    "acceptance_precondition": "Close only verified isolated Settings popout; require activeWindow===existing vault window before command dispatch.",
+    "cdp_implementation": "No newPage/newContext fallback exists. Pre/post attachment target inventories showed only app://; Settings appeared later. Do not claim the exact Settings triggering step established."
+  },
+  "preserved_runner_failures": [
+    {
+      "path": "/tmp/forge-native-candidate-03-extended-3hu708my/native-extended-results.json",
+      "cause": "Prompt absent from inspected main window; later native window-routing diagnostic explains destination."
+    },
+    {
+      "path": "/tmp/forge-native-repair-extension-szk63h0x/native-extended-results.json",
+      "cause": "Same native window-routing miss with workspace.layoutReady true."
+    },
+    {
+      "path": "/tmp/forge-native-final-extension-kq7bafb0/native-extended-results.json",
+      "cause": "Empty-window cleanup missed nonempty Settings popout."
+    },
+    {
+      "path": "/tmp/forge-native-final-focus-h1wk3l_j/native-extended-results.json",
+      "cause": "Main-header click did not restore activeWindow identity; guarded dispatch stopped."
+    },
+    {
+      "path": "/tmp/forge-native-accepted-guwffi82/native-extended-results.json",
+      "cause": "After18 passed checks, default getByRole excluded correctly hidden incoming button; selector corrected in continuation."
+    },
+    {
+      "path": "/tmp/forge-native-accepted-guwffi82/native-continuation-results.json",
+      "cause": "Continuation helper extraction omitted create; restored in next continuation."
+    },
+    {
+      "path": "/tmp/forge-native-final-focus-h1wk3l_j/launcher-rejection.json",
+      "cause": "Launcher transcription error; no host launched."
+    }
+  ],
+  "run_elapsed_ms": {
+    "frozen_baseline_two_scenario": 1007.1354780000001,
+    "first_candidate_two_scenario": 1049.6505590000002,
+    "repaired_candidate_two_scenario": 960.7547509999999,
+    "accepted_original14_plus4_before_hidden_selector_error": 21262,
+    "continuation_with_helper_error": 8780,
+    "final_continuation": 10813
+  },
+  "timing_limits": "Different native comparison stages are not comparable throughput benchmarks; full original14 baseline elapsed was not instrumented. Prior diagnostic wall cost not reset or claimed zero.",
+  "screenshots": [
+    "/tmp/forge-native-accepted-guwffi82/native-candidate-default.png",
+    "/tmp/forge-native-accepted-guwffi82/native-candidate-window.png",
+    "/tmp/forge-native-accepted-guwffi82/native-candidate-selected.png",
+    "/tmp/forge-native-accepted-guwffi82/native-candidate-expanded.png",
+    "/tmp/forge-native-accepted-guwffi82/native-candidate-prompt.png",
+    "/tmp/forge-native-accepted-guwffi82/native-candidate-questions.png",
+    "/tmp/forge-native-accepted-guwffi82/native-candidate-navigation.png",
+    "/tmp/forge-native-accepted-guwffi82/native-continuation-parser.png",
+    "/tmp/forge-native-accepted-guwffi82/native-continuation-folder-rename.png",
+    "/tmp/forge-native-accepted-guwffi82/native-continuation-incoming-cap.png",
+    "/tmp/forge-native-repair-product-4dhzq3ls/native-product-incoming.png",
+    "/tmp/forge-native-repair-product-4dhzq3ls/native-product-natural-links.png"
+  ],
+  "artifact_sha256": {
+    "/tmp/forge-native-accepted-guwffi82/runtime-receipt.json": "342f01110e977514b21dfd9b9c3d2bbca8830936fcf7244d380c8851b3f2fb12",
+    "/tmp/forge-native-accepted-guwffi82/continuation-02-receipt.json": "5af18296070e078ee253c65e4c8c9c0365bafbe0cda98c9535c44a672084832c",
+    "/tmp/forge-native-accepted-guwffi82/native-extended.cjs": "1f7a1e920a0b220837323e5176339681b0a19a94954946ef691999ec8a0f1308",
+    "/tmp/forge-native-accepted-guwffi82/native-continuation-02.cjs": "a04c09f42fca98d11ef30031ad9f40703f8893dc58888ef3dad7a98e3d793e74",
+    "/tmp/forge-native-accepted-guwffi82/native-extended-results.json": "4a6c2c02dab124c5da2e818bd8ad2ee7d4efb1e3c0f7dcbb072ad793d6e4e223",
+    "/tmp/forge-native-accepted-guwffi82/native-continuation-results.json": "cebf48d24aef4fc0c4be7981ef3fda0897a99e1ea1b50b359a62b3eb7df9915a",
+    "/tmp/forge-native-accepted-guwffi82/native-continuation-02-results.json": "6dfa4dbc119df83030364138c3c398d9e69d6a579afffde80903ccfb97503764",
+    "/tmp/forge-native-accepted-guwffi82/original-six-inputs.json": "b4af9f7157badc65728d051090e77f8505c6f95e80a1b93c003441b8324c5324",
+    "/tmp/forge-native-accepted-guwffi82/cleanup-receipt.json": "42421cc3f1d7033e597515bb0402e0f75744f1560d7d9fc268a97b0cae8aca84",
+    "/tmp/forge-native-repair-product-4dhzq3ls/runtime-receipt.json": "40919d1e715dd7ee574875a5d68ec9502cabc5ac71e67fb9b946853ef4da9861",
+    "/tmp/forge-native-repair-product-4dhzq3ls/frozen-inputs.json": "6a9833755995345df50d8f7ecf37244ae47859571e292ff7159e7b54166b29ff",
+    "/tmp/forge-native-repair-product-4dhzq3ls/native-product.cjs": "739ff92cb003a96ccfb81b7793117ce32df9cb880ea8cd7ba2f6689343689d31",
+    "/tmp/forge-native-repair-product-4dhzq3ls/native-product-results.json": "2b7b828ab817cbd8dcb40d6c3db7998c7fbd038e571c54b6275817f9befcae31",
+    "/tmp/forge-native-accepted-guwffi82/native-candidate-default.png": "5ddafa520a2e8a265e0fb283a384e54915c908ef916e15c848669181c3772373",
+    "/tmp/forge-native-accepted-guwffi82/native-candidate-window.png": "d7761100579dbcf94988eb8bcec27340279316f752fdc84c1e4357c1708daee4",
+    "/tmp/forge-native-accepted-guwffi82/native-candidate-selected.png": "0e37424d050b5d867873afd17bcc6e8e69707aec1f03d8b81f21048751b00374",
+    "/tmp/forge-native-accepted-guwffi82/native-candidate-expanded.png": "626abe12ec9884c8d9193bd7376209512bf27808fc3046a533fd71209db0c925",
+    "/tmp/forge-native-accepted-guwffi82/native-candidate-prompt.png": "6f465bb43fb386c608c92a08fa5f7c7e70e695e03cdb27f92100b8d99b7ea636",
+    "/tmp/forge-native-accepted-guwffi82/native-candidate-questions.png": "ced7322035559359460a3eec8de675beaf0f5538000236be13b223426d4acd82",
+    "/tmp/forge-native-accepted-guwffi82/native-candidate-navigation.png": "1b77059bf67346dbfbb7acf3b4e12920739218db1e2e90b4329c1121d7ca83c5",
+    "/tmp/forge-native-accepted-guwffi82/native-continuation-parser.png": "9ef6efdfa8b5f05dad4bd8d9ec744fc4b22f1c2f2c0cabbef551714ab1a5f1fb",
+    "/tmp/forge-native-accepted-guwffi82/native-continuation-folder-rename.png": "203f2bd817b96335177b7ad3873a7dd61afd4a02589521239a27a2c4ce7c5878",
+    "/tmp/forge-native-accepted-guwffi82/native-continuation-incoming-cap.png": "12630cb8fa13588d943411ec02064ded2a8993d1635f45215d9e42077e8ff43f",
+    "/tmp/forge-native-repair-product-4dhzq3ls/native-product-incoming.png": "51ea886954868a96ab05aedbb3302120baca8ea9dec20531208b721c1d9bf044",
+    "/tmp/forge-native-repair-product-4dhzq3ls/native-product-natural-links.png": "76f220461ad2ac8d11830ac7600c7c11603ab0ea6d70bba95868a5c0bab7f7c8",
+    "/tmp/forge-native-accepted-guwffi82/runtime/main.js": "2b18a3484415e06fc1fe2ac4e0c4db985f85cc37ff9cbae3085e1521275068de",
+    "/tmp/forge-native-accepted-guwffi82/runtime/styles.css": "aaef17d2e7cc149a95da475c1198de667f8e6726a2fb186957d0bcd85d17162c",
+    "/tmp/forge-native-accepted-guwffi82/runtime/manifest.json": "1fc6b859f2a98e69c5babba3ac861939d8a32e913230e67130840dcd5f16dd60"
+  },
+  "cleanup": {
+    "checked_at": "2026-10-11T01:10:56.795044+00:00",
+    "owned_native_host_processes_remaining": [],
+    "xvfb_process_inventory": [],
+    "all_native_runner_sessions_returned": true,
+    "cleanup_method": "Each runner closes its CDP connection, SIGTERMs its owned native main process and awaits exit; xvfb-run cleans its owned X server on runner exit."
+  },
+  "scope": "No personal vault/global app configuration, GPU workload, system install, publishing or repository writes. Only isolated /tmp profiles and synthetic notes.",
+  "loaded_host_file_sha256": {
+    "/tmp/forge-native-baseline-wezdr6iq/host/obsidian-1.14.4/obsidian": "2034c889bfac8149bc68f1603f985797a7ad12bdc9c41927280d4101dab70735",
+    "/tmp/forge-native-baseline-wezdr6iq/host/obsidian-1.14.4/resources/obsidian.asar": "146ef8470d8cbb4a6db209bdc19bf2bad13350444186c0fd93c31087b142b92f",
+    "/tmp/forge-native-baseline-wezdr6iq/host/obsidian-1.14.4/resources/app.asar": "2b50b52ddab21f81ca113e6b6f3ce83b0274aa6fa3a7e09f99d779c159fe4492",
+    "/tmp/forge-native-baseline-wezdr6iq/host.tar.gz": "e70b7cd63787e7f798a84fec453f5c446b91877bd3f612e8fb98e9b76cc81120"
+  }
+}
