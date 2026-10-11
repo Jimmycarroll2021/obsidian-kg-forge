@@ -200,6 +200,7 @@ describe('Graph view display controls', () => {
 		expect(nodeIds(fixture.view.contentEl)).toEqual([]);
 		expect(fixture.view.contentEl.querySelector('.kg-map-evidence')).toBeNull();
 		fixture.extract.mockRejectedValueOnce(new Error('cannot read note'));
+		fixture.files.get(anchor)!.stat.mtime++;
 		fixture.setActiveFile(anchor);
 		await vi.waitFor(() => expect(fixture.view.contentEl.textContent).toContain('cannot read note'));
 		expect(nodeIds(fixture.view.contentEl)).toEqual([]);

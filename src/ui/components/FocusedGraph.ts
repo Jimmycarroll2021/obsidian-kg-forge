@@ -5,6 +5,14 @@ import { projectGraph, type GraphNode, type GraphDisplayOptions } from '../graph
 interface FocusedGraphActions {
 	canOpenNote: (id: string) => boolean;
 	onOpenNote: (id: string) => void | Promise<void>;
+	onCentreNote?: (id: string) => void | Promise<void>;
+	getAnchorLabel?: () => string;
+}
+
+export interface FocusedGraphState {
+	page: number;
+	selectedId: string | null;
+	evidencePage: number;
 }
 
 const EVIDENCE_PAGE_SIZE = 8;
@@ -21,15 +29,20 @@ export class FocusedGraph extends Component {
 
 	constructor(private container: HTMLElement, private actions: FocusedGraphActions) { super(); }
 
-	setGraph(anchorPath: string, triples: Triple[], knownNotePaths: Iterable<string>, options: GraphDisplayOptions): void {
+	setGraph(anchorPath: string, triples: Triple[], knownNotePaths: Iterable<string>, options: GraphDisplayOptions,
+		restore?: FocusedGraphState): void {
 		this.anchorPath = anchorPath;
 		this.triples = triples;
 		this.knownNotePaths = Array.from(knownNotePaths);
 		this.options = options;
-		this.page = 0;
-		this.selectedId = null;
-		this.evidencePage = 0;
+		this.page = restore?.page ?? 0;
+		this.selectedId = restore?.selectedId ?? null;
+		this.evidencePage = restore?.evidencePage ?? 0;
 		this.render();
+	}
+
+	getState(): FocusedGraphState {
+		return { page: this.page, selectedId: this.selectedId, evidencePage: this.evidencePage };
 	}
 
 	clear(): void {
@@ -46,6 +59,7 @@ export class FocusedGraph extends Component {
 			...this.options, page: this.page, pageSize: 12,
 		});
 		this.page = projection.page;
+		if (!projection.nodes.some(node => node.id === this.selectedId)) this.selectedId = null;
 		const counts = projection.counts;
 		const summary = this.container.createDiv({ cls: 'kg-map-summary' });
 		summary.setAttribute('role', 'status');
@@ -61,9 +75,9 @@ export class FocusedGraph extends Component {
 		if (hidden.length > 0) summary.createDiv({ text: `Hidden from the map: ${hidden.join(' · ')}`, cls: 'kg-map-hidden' });
 
 		const map = this.container.createDiv({ cls: 'kg-focused-map' });
-		map.setAttribute('aria-label', 'Active note relationship map');
+		map.setAttribute('aria-label', 'Note relationship map');
 		const anchor = map.createDiv({ cls: 'kg-map-anchor', attr: { 'data-note-id': projection.anchor.id } });
-		anchor.createDiv({ text: 'Active note', cls: 'kg-map-eyebrow' });
+		anchor.createDiv({ text: this.actions.getAnchorLabel?.() ?? 'Active note', cls: 'kg-map-eyebrow' });
 		anchor.createEl('h5', { text: projection.anchor.label, cls: 'kg-map-anchor-title' });
 		anchor.createDiv({ text: this.anchorPath, cls: 'kg-map-anchor-path' });
 		if (projection.anchor.types.length > 0) {
@@ -124,6 +138,11 @@ export class FocusedGraph extends Component {
 		const open = header.createEl('button', { text: 'Open note', cls: 'kg-button' });
 		open.disabled = !node.resolved || !this.actions.canOpenNote(node.id);
 		open.addEventListener('click', () => { void this.actions.onOpenNote(node.id); });
+		if (this.actions.onCentreNote) {
+			const centre = header.createEl('button', { text: 'Centre in graph', cls: 'kg-button' });
+			centre.disabled = !node.resolved || !this.actions.canOpenNote(node.id);
+			centre.addEventListener('click', () => { void this.actions.onCentreNote?.(node.id); });
+		}
 		container.createDiv({ text: node.id, cls: 'kg-map-detail-path' });
 		if (!node.resolved) container.createDiv({ text: 'This target has no matching note in the vault.', cls: 'kg-map-selection-hint' });
 		const evidence = node.relations.flatMap(relation => relation.triples.map(triple => ({ relation, triple })));
@@ -131,12 +150,13 @@ export class FocusedGraph extends Component {
 		this.evidencePage = Math.min(this.evidencePage, pageCount - 1);
 		container.createDiv({ text: `${evidence.length} relationship facts · evidence ${this.evidencePage + 1} / ${pageCount}`, cls: 'kg-map-evidence-summary' });
 		const list = container.createEl('ul', { cls: 'kg-map-evidence' });
+		const anchorLabel = this.actions.getAnchorLabel?.() ?? 'Active note';
 		for (const { relation, triple } of evidence.slice(this.evidencePage * EVIDENCE_PAGE_SIZE, (this.evidencePage + 1) * EVIDENCE_PAGE_SIZE)) {
 			const row = list.createEl('li');
 			row.createDiv({
 				text: relation.direction === 'incoming'
-					? `${node.label} → ${triple.predicate.replace(/_/g, ' ')} → active note`
-					: `Active note → ${triple.predicate.replace(/_/g, ' ')} → ${node.label}`,
+					? `${node.label} → ${triple.predicate.replace(/_/g, ' ')} → ${anchorLabel.toLowerCase()}`
+					: `${anchorLabel} → ${triple.predicate.replace(/_/g, ' ')} → ${node.label}`,
 				cls: 'kg-map-evidence-fact',
 			});
 			row.createDiv({ text: `Source: ${triple.provenance.source}`, cls: 'kg-map-evidence-source' });

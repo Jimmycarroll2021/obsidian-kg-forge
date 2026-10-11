@@ -1,0 +1,22 @@
+{
+  "kind": "native_product_baseline",
+  "baseline_revision": "c4596bd47bba3051e44ee4e79f9ab6a59161911e",
+  "host_release": "https://github.com/obsidianmd/obsidian-releases/releases/tag/v1.14.4",
+  "host_asset_sha256": "e70b7cd63787e7f798a84fec453f5c446b91877bd3f612e8fb98e9b76cc81120",
+  "checks": {
+    "incoming_relationship_discovery": "FAIL - actual native metadata resolves incoming links but own view is empty",
+    "faithful_natural_typed_links": "FAIL - additional unresolved and target"
+  },
+  "input_notes_unchanged": true,
+  "files": {
+    "frozen-inputs.json": "6a9833755995345df50d8f7ecf37244ae47859571e292ff7159e7b54166b29ff",
+    "native-product.cjs": "739ff92cb003a96ccfb81b7793117ce32df9cb880ea8cd7ba2f6689343689d31",
+    "native-product-results.json": "819e73596a25b7d68bb5a364ee66df099ddba61e29c9e1c6893a41c48841b442",
+    "native-product-incoming.png": "dd79cda50a10f3a8c7d8a7137849a3369c8bae6f44b18d862b3a5197516fa1f2",
+    "native-product-natural-links.png": "cf4d620a94f303b39c0b5a017646ae23e0a0b138f1862fb3804ae9c3ef56e6ad",
+    "vault/Knowledge Forge/scenarios/Natural.md.triples.json": "b425b78f5fd1ca15f12d622a847e63f50a8a6f55b51a9bbab2de7cae1de14a2f"
+  },
+  "recorded_at": "2026-10-11T00:40:24.515522+00:00",
+  "candidate_comparison": "Reuse the exact nine Markdown input hashes, native host and this runner; clone profiles/vaults instead of resetting baseline evidence.",
+  "rawDirectory": "/tmp/forge-native-product-baseline-wncz1gfy"
+}

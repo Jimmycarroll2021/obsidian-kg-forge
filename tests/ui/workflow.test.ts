@@ -167,6 +167,7 @@ describe('Active-note graph and evidence list', () => {
 		view.contentEl.querySelector('select')!.dispatchEvent(new Event('change'));
 		expect(view.contentEl.querySelectorAll('.kg-map-node')).toHaveLength(0);
 		fixture.app.vault.cachedRead.mockRejectedValueOnce(new Error('vault read failed'));
+		fixture.files.get('concepts/Anchor.md')!.stat.mtime++;
 		fixture.setActiveFile('concepts/Anchor.md');
 		await vi.waitFor(() => expect(view.contentEl.textContent).toContain('vault read failed'));
 		expect(view.contentEl.querySelectorAll('.kg-map-node')).toHaveLength(0);

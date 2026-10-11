@@ -6,9 +6,9 @@ Knowledge Forge is an offline Obsidian plugin for turning note relationships int
 
 ## What works
 
-- Extract subject–predicate–object relationships from `fileClass`, `source_ids`, a `## Connections` section, and body wikilinks.
+- Extract subject–predicate–object relationships from `fileClass`, `source_ids`, repeated `## Connections` sections, and ordinary internal Markdown links or wikilinks.
 - Keep full vault paths as note identities, including notes with the same filename in different folders. Obsidian resolves aliases, headings, and relative links.
-- Inspect a focused relationship map around the active note, refreshed when the note or its metadata changes. Neighbours have compact names, directional relationship labels, and folder context when names collide. Select a neighbour for evidence and an explicit Open note action.
+- Inspect a focused relationship map around a note, including its indexed incoming relationships, refreshed when relevant notes or metadata change. Neighbours have compact names, directional relationship labels, and folder context when names collide. Select a neighbour for evidence and an explicit Open note action.
 - Build a GraphRAG prompt: choose an anchor, enter a question, set a radius of 0–5 relationship hops, generate a preview, inspect the evidence, and copy the displayed text. Shared class labels and unresolved targets cannot join unrelated notes. Prompts include at most 500 facts.
 - Validate folder/fileClass contracts and source IDs, including broken mapped targets. Nested folder mappings use the most specific match.
 - Export Cypher statements and Dataview query templates. Generated output folders are created automatically and excluded from plugin scans.
@@ -20,9 +20,12 @@ Provenance identifies the originating note, capture time, extraction confidence,
 
 Build outside your personal vault, then copy the three runtime files into a test vault first:
 
+The current workflow and graph upgrade is available on [draft PR #1](https://github.com/Jimmycarroll2021/obsidian-kg-forge/pull/1). Use its branch for this test build:
+
 ```bash
 git clone https://github.com/Jimmycarroll2021/obsidian-kg-forge.git
 cd obsidian-kg-forge
+git checkout delivery/reliable-vault-workflow
 npm ci
 npm run check
 ```
@@ -53,7 +56,7 @@ source:: SRC-DEMO
 See [[algorithms/Shortest path#Method|shortest paths]].
 ```
 
-Relationship fields supported inside `## Connections`: `up`, `down`, `same`, `next`, `prev`, `source`, `requires`, `enables`, and `related_to`. Body wikilinks become inferred `links_to` relationships. Code examples are excluded. An explicit `fileClass` takes precedence over folder inference; validation still reports a disagreement with the folder contract.
+Relationship fields supported inside `## Connections`: `up`, `down`, `same`, `next`, `prev`, `source`, `requires`, `enables`, and `related_to`. Ordinary body links, including internal Markdown links, become inferred `links_to` relationships. Unsupported/plain lines in Connections remain available as inferred links. Supported fields may repeat; joining two links with prose does not create an extra target. Comments, escaped examples, inline code and fenced code are excluded. An explicit `fileClass` takes precedence over folder inference; validation still reports a disagreement with the folder contract.
 
 If you use source IDs, create an index at the configured **Source map path** (default `papers/index.md`):
 
@@ -85,13 +88,13 @@ Obsidian prefixes these commands with **Knowledge Forge**.
 
 Run **Open knowledge graph** with a source note active. The map starts with explicit relationships and shows at most **12 neighbours per page**. It groups multiple relationships to the same note into one card. Classes appear as badges on the active note; source facts and inferred body links are hidden initially. Use **Show sources** and **Show inferred links** to reveal them. Counts distinguish hidden facts, filtered neighbours, and neighbours on other pages.
 
-Search for a neighbour or choose a predicate to narrow the map. Select a card with the mouse or keyboard to inspect its provenance; evidence is paged separately at eight facts per page. **Open note** opens that exact target. Unresolved targets are marked and keep that button disabled. Duplicate note names retain their folder context. The layout stacks in narrow panes and follows the Obsidian theme.
+Search for a neighbour or choose a predicate to narrow the map. Select a card with the mouse or keyboard to inspect its provenance; evidence is paged separately at eight facts per page. **Centre in graph** explores that exact neighbour while keeping the editor on its current note. **Graph back** and **Graph forward** restore search, predicate, visibility, paging and selected evidence through up to 50 history entries. Exploration pins the map; enable **Follow active note** to return to the editor. **Open note** opens the exact target in the editor. Unresolved targets are marked and keep both actions disabled. Duplicate note names retain their folder context. The layout stacks in narrow panes and follows the Obsidian theme.
 
 ![Focused active-note relationship map](docs/images/focused-graph.png)
 
 *Actual plugin rendering in a browser fixture with synthetic notes and a mocked Obsidian host.*
 
-The map reads the active note and the configured source index. It does not scan all vault contents to draw the view. For a broader multi-hop neighbourhood, use the GraphRAG command.
+The map reads its anchor, the configured source index and up to **100 indexed referring notes initially**. Obsidian’s resolved-link index supplies the candidate paths; only extracted relationships to the anchor enter the map. **Load more incoming notes** extends the limit by 100. Changed notes invalidate cached extraction, and the status reports unreadable notes as a partial map. It enumerates note paths without reading unrelated vault contents. Plain source IDs without native note links are outside this incoming index, so the status reports indexed notes rather than claiming a complete semantic graph. For a broader multi-hop neighbourhood in a prompt, use the GraphRAG command.
 
 ## Settings and generated files
 
@@ -112,6 +115,6 @@ Questions and settings live in Obsidian's plugin `data.json`. A save failure is 
 
 ## Verification and contributions
 
-`npm run check` runs lint, TypeScript, regression tests, and the production bundle. Tests cover engine behaviour, safe outputs, persistence, UI lifecycles, and the sample-vault command journey. Obsidian APIs are mocked in automated tests; native host validation and executing an export in Neo4j are separate checks. See [the delivery record](docs/DELIVERY.md) for the repair scope and evidence.
+`npm run check` runs lint, TypeScript, regression tests, and the production bundle. Tests cover engine behaviour, safe outputs, persistence, UI lifecycles, and the sample-vault command journey. Obsidian APIs are mocked in automated tests. Native Obsidian 1.14.4 loading, rendering, metadata, desktop clipboard and persistence have also been tested in disposable vaults; see [the verification record](docs/VERIFICATION.md) for the exact builds and limits. Executing an export in Neo4j remains a separate check. See [the delivery record](docs/DELIVERY.md) for the repair scope and evidence.
 
 Report bugs with the Obsidian/plugin version, steps to reproduce, and a small sample note without private content. Future work can build on this foundation: whole-vault graph exploration, semantic question evaluation, and opt-in model integration need their own acceptance criteria.

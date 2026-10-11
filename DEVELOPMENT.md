@@ -13,7 +13,7 @@ npm run check
 
 - `tests/engine`: extraction, contextual source maps, schema checks, GraphRAG traversal/templates, Cypher serialization, and safe output writes.
 - `tests/settings.test.ts`: migration, independent defaults, ordered writes, and failed-write recovery.
-- `tests/ui`: preview/copy flow, stale async jobs, graph refresh, bounded graph/evidence paging, duplicate-name display, selected provenance, saved questions, retry-save state, and coverage invalidation.
+- `tests/ui`: preview/copy flow, stale async jobs, indexed incoming changes, graph-only navigation/history, graph refresh, bounded graph/evidence paging, duplicate-name display, selected provenance, saved questions, retry-save state, and coverage invalidation.
 - `tests/integration`: actual sample Markdown through registered commands, duplicate-name caches, grounded prompts, repeated validation/exports, and first use without an index.
 
 Vitest runs in jsdom with a small Obsidian adapter at `tests/mocks/obsidian.ts` and an in-memory vault at `tests/helpers/vault.ts`. These tests exercise plugin logic and DOM interaction; they do not prove compatibility with the running Obsidian host. Keep mocks faithful to the API behaviour needed by each regression, and avoid simulating an unavailable platform as acceptance evidence.
@@ -44,3 +44,7 @@ A repair branch and passing CI do not publish a plugin release. Before an author
 4. Push the intended tag only when release publication is authorised. The tag workflow checks and uploads `main.js`, `manifest.json`, and `styles.css`.
 
 The current repair does not create a release tag, migrate a user's Cypher store, or install into a personal vault. The durable task record is [docs/DELIVERY.md](docs/DELIVERY.md); no second workflow tracker is required.
+
+## Graph quality experiments
+
+The [frozen eight-task contract and replay instructions](docs/experiments/graph-quality/README.md) cover fact fidelity, actual incoming relationships, graph-only exploration, freshness, bounds and unresolved identities. Preserve failed candidates and independent proofs. A synthetic timing measures the fixed projection model; it does not establish native latency, a global concurrency cap, mobile-host compatibility or superiority over another plugin. Canonical task/recovery state stays in `docs/DELIVERY.md`; experiment results remain subordinate.

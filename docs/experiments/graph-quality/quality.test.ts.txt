@@ -1,0 +1,86 @@
+import { afterEach, afterAll, describe, expect, it, vi } from 'vitest';
+import { writeFileSync } from 'node:fs';
+import { performance } from 'node:perf_hooks';
+import { Plugin } from '../mocks/obsidian';
+import { createMockApp } from '../helpers/vault';
+import { KnowledgeGraphView } from '../../src/ui/KnowledgeGraphView';
+import { TripleExtractor } from '../../src/engine/TripleExtractor';
+import { DEFAULT_SETTINGS } from '../../src/settings';
+import { projectGraph } from '../../src/ui/graphModel';
+import { Triple } from '../../src/models/Triple';
+import { createProvenance } from '../../src/models/Provenance';
+
+const views: KnowledgeGraphView[] = [];
+const ids = (v: KnowledgeGraphView) => Array.from(v.contentEl.querySelectorAll<HTMLElement>('.kg-map-node')).map(e => e.dataset.noteId);
+function action(v: KnowledgeGraphView, name: string) {
+ const b = Array.from(v.contentEl.querySelectorAll<HTMLButtonElement>('button')).find(e => e.textContent === name || e.getAttribute('aria-label') === name);
+ expect(b, `missing ${name}`).toBeDefined(); return b!;
+}
+async function view(notes: Record<string, string>, anchor: string, links: Record<string, Record<string, number>> = {}) {
+ const f = createMockApp(notes); f.app.metadataCache.resolvedLinks = links; f.setActiveFile(anchor);
+ const p = new Plugin(f.app) as any; p.settings = structuredClone(DEFAULT_SETTINGS);
+ const v = new KnowledgeGraphView(f.leaf as never, p); document.body.append(v.contentEl); views.push(v); await v.onOpen();
+ return { ...f, v };
+}
+async function extract(body: string) {
+ const f = createMockApp({ 'Anchor.md': body, 'A.md': '', 'B.md': '', 'C.md': '' });
+ return new TripleExtractor(f.app.vault, f.app.metadataCache).extract(f.files.get('Anchor.md')! as never);
+}
+afterEach(async () => { for (const v of views.splice(0)) { await v.onClose(); v.unload(); } document.body.replaceChildren(); vi.restoreAllMocks(); });
+
+describe('frozen graph product tasks', () => {
+ it('T1 quiet outgoing map', async () => {
+  const { v } = await view({ 'A.md': '## Connections\nrequires:: [[B]]\n', 'B.md': '' }, 'A.md');
+  expect(ids(v)).toEqual(['B.md']); expect(v.contentEl.querySelector('.kg-map-node-name')?.textContent).toBe('B');
+  expect(v.contentEl.textContent).not.toContain('Confidence'); expect(v.contentEl.querySelector('.kg-map-evidence')).toBeNull();
+ });
+ it('T2 faithful typed links', async () => {
+  const triples = await extract('## Connections\nrequires:: [[A]] and [[B]]\n');
+  expect(triples.filter(t => t.predicate === 'requires').map(t => t.object).sort()).toEqual(['A.md', 'B.md']);
+ });
+ it('T3 ordinary and repeated note conventions', async () => {
+  const triples = await extract('## Connections\n[[A]]\n\n## Notes\n[B](B.md#Section)\n\n## Connections\nenables:: [[C]]\n');
+  expect(triples.some(t => t.object === 'A.md' && t.inferred)).toBe(true);
+  expect(triples.some(t => t.object === 'B.md' && t.inferred)).toBe(true);
+  expect(triples.some(t => t.object === 'C.md' && t.predicate === 'enables' && !t.inferred)).toBe(true);
+ });
+ it('T4 suppress examples and escaped literals', async () => {
+  const triples = await extract('<!-- [[A]] -->\n\\[[B]]\n`[[C]]`\n```md\n[[A]]\n```\n');
+  expect(triples.filter(t => t.predicate === 'links_to')).toEqual([]);
+ });
+ it('T5 actual incoming discovery and source evidence', async () => {
+  const { v } = await view({ 'A.md': '## Connections\nrequires:: [[B]]\n', 'B.md': '', 'C.md': '## Connections\nenables:: [[B]]\n' }, 'B.md', { 'A.md': { 'B.md': 1 }, 'C.md': { 'B.md': 1 } });
+  expect(ids(v).sort()).toEqual(['A.md', 'C.md']); action(v, 'Inspect A.md').click();
+  expect(v.contentEl.querySelector('.kg-map-evidence-fact')?.textContent).toContain('A → requires → active note');
+  expect(v.contentEl.querySelector('.kg-map-evidence-source')?.textContent).toBe('Source: A.md');
+ });
+ it('T6 graph-only centre and restored history', async () => {
+  const f = await view({ 'A.md': '## Connections\nrequires:: [[B]]\n', 'B.md': '## Connections\nenables:: [[C]]\n', 'C.md': '' }, 'A.md');
+  const input = f.v.contentEl.querySelector<HTMLInputElement>('input[type=search]')!;
+  input.value = 'B'; input.dispatchEvent(new Event('input')); action(f.v, 'Inspect B.md').click(); action(f.v, 'Centre in graph').click();
+  await vi.waitFor(() => expect(f.v.contentEl.querySelector('.kg-map-anchor')?.getAttribute('data-note-id')).toBe('B.md'));
+  expect(f.app.workspace.getActiveFile().path).toBe('A.md'); expect(f.app.workspace.openLinkText).not.toHaveBeenCalled();
+  action(f.v, 'Graph back').click();
+  await vi.waitFor(() => expect(f.v.contentEl.querySelector('.kg-map-anchor')?.getAttribute('data-note-id')).toBe('A.md'));
+  expect(f.v.contentEl.querySelector<HTMLInputElement>('input[type=search]')?.value).toBe('B');
+ });
+ it('T7 resolved incoming removal refreshes', async () => {
+  const f = await view({ 'A.md': '## Connections\nrequires:: [[B]]\n', 'B.md': '' }, 'B.md', { 'A.md': { 'B.md': 1 } });
+  expect(ids(f.v)).toEqual(['A.md']); f.contents.set('A.md', 'No link'); f.app.metadataCache.resolvedLinks = { 'A.md': {} };
+  f.app.metadataCache.trigger('resolve', f.files.get('A.md'));
+  await vi.waitFor(() => expect(ids(f.v)).toEqual([]));
+ });
+ it('T8 bounded cost and unresolved safety', async () => {
+  const notes: Record<string, string> = { 'A.md': '## Connections\nrequires:: [[Missing]]\n' };
+  for (let i = 0; i < 2000; i++) notes[`Other${i}.md`] = 'unrelated';
+  const f = await view(notes, 'A.md'); expect(f.app.vault.cachedRead.mock.calls.map((args: any[]) => args[0].path)).toEqual(['A.md']);
+  expect(ids(f.v)).toEqual(['Missing']); action(f.v, 'Inspect Missing').click(); expect(action(f.v, 'Open note').disabled).toBe(true);
+  expect(f.v.contentEl.querySelectorAll('.kg-map-node').length).toBeLessThanOrEqual(12);
+ });
+});
+afterAll(() => {
+ const triples = Array.from({length:5000}, (_, i) => new Triple('Anchor.md', 'requires', `N${i}.md`, createProvenance('Anchor.md')));
+ const known = ['Anchor.md', ...triples.map(t => t.object)]; projectGraph('Anchor.md', triples, known);
+ const times = Array.from({length:15}, () => { const start=performance.now(); const graph=projectGraph('Anchor.md', triples, known); expect(graph.nodes).toHaveLength(12); return performance.now()-start; }).sort((a,b)=>a-b);
+ writeFileSync('projection-metrics.json', JSON.stringify({facts:5000,repetitions:15,medianMs:times[7],maxMs:times[14]},null,2));
+});

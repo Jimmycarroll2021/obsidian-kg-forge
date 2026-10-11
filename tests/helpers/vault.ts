@@ -13,13 +13,18 @@ export function createMockApp(notes: Record<string, Note>) {
   frontmatters.set(path, typeof note === 'object' && note.frontmatter ? note.frontmatter : yaml ? parse(yaml) ?? {} : {});
   const parts = path.split('/'); for (let i = 1; i < parts.length; i++) { const folder = parts.slice(0, i).join('/'); folders.set(folder, new TFolder(folder)); }
  }
- const listeners = new Map<string, Set<(...args: any[]) => void>>();
- function on(name: string, fn: (...args: any[]) => void) { const set = listeners.get(name) ?? new Set(); set.add(fn); listeners.set(name, set); return { off: () => set.delete(fn) }; }
- function trigger(name: string, ...args: any[]) { listeners.get(name)?.forEach(fn => fn(...args)); }
+ function events() {
+  const listeners = new Map<string, Set<(...args: any[]) => void>>();
+  function on(name: string, fn: (...args: any[]) => void) { const set = listeners.get(name) ?? new Set(); set.add(fn); listeners.set(name, set); return { off: () => set.delete(fn) }; }
+  function trigger(name: string, ...args: any[]) { listeners.get(name)?.forEach(fn => fn(...args)); }
+  return { on, trigger };
+ }
+ const vaultEvents = events(), metadataEvents = events(), workspaceEvents = events();
  let active = files.values().next().value ?? null;
  function parentExists(path: string) { const parent = path.slice(0, path.lastIndexOf('/')); if (path.includes('/') && !folders.has(parent)) throw new Error('Parent folder does not exist: ' + parent); }
  const isVisible = (path: string) => !path.split('/').some(part => part.startsWith('.'));
  const vault = {
+  ...vaultEvents,
   configDir: '.obsidian',
   getMarkdownFiles: () => [...files.values()].filter(f => f.extension === 'md' && isVisible(f.path)),
   getAbstractFileByPath: (path: string) => isVisible(path) ? files.get(path) ?? folders.get(path) ?? null : null,
@@ -30,6 +35,9 @@ export function createMockApp(notes: Record<string, Note>) {
   process: vi.fn(async (file: TFile, fn: (content: string) => string) => { const value = fn(contents.get(file.path)!); contents.set(file.path, value); return value; }),
  };
  const metadataCache = {
+  ...metadataEvents,
+  resolvedLinks: {} as Record<string, Record<string, number>>,
+  unresolvedLinks: {} as Record<string, Record<string, number>>,
   getFileCache: (file: TFile) => ({ frontmatter: frontmatters.get(file.path) ?? {} }),
   getFirstLinkpathDest: (link: string, source: string) => {
    const target = link.split('#')[0]; if (!target) return files.get(source) ?? null;
@@ -37,10 +45,10 @@ export function createMockApp(notes: Record<string, Note>) {
    const normalize = (v: string) => { const out: string[] = []; for (const part of v.split('/')) { if (part === '..') out.pop(); else if (part !== '.' && part) out.push(part); } return out.join('/'); };
    for (const candidate of [normalize(base + target), normalize(target)]) { const file = files.get(candidate) ?? files.get(candidate + '.md'); if (file) return file; }
    return [...files.values()].find(f => f.basename === target || f.name === target) ?? null;
-  }, on, trigger,
+  },
  };
  const leaf = { openFile: vi.fn(async () => {}), setViewState: vi.fn(async () => {}) };
- const workspace = { getActiveFile: () => active, getLeaf: () => leaf, getRightLeaf: () => leaf, getLeavesOfType: () => [], revealLeaf: vi.fn(async () => {}), openLinkText: vi.fn(async () => {}), on, trigger };
+ const workspace = { getActiveFile: () => active, getLeaf: () => leaf, getRightLeaf: () => leaf, getLeavesOfType: () => [], revealLeaf: vi.fn(async () => {}), openLinkText: vi.fn(async () => {}), ...workspaceEvents };
  const app = { vault, metadataCache, workspace } as any; Object.assign(leaf, { app });
- return { app, files, contents, folders, leaf, setActiveFile: (path: string | null) => { active = path ? files.get(path) ?? null : null; trigger('file-open', active); } };
+ return { app, files, contents, folders, leaf, setActiveFile: (path: string | null) => { active = path ? files.get(path) ?? null : null; workspaceEvents.trigger('file-open', active); } };
 }

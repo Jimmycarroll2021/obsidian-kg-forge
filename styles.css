@@ -83,6 +83,16 @@
 .kg-knowledge-graph-view .kg-graph-controls { align-items: stretch; }
 .kg-knowledge-graph-view .kg-graph-search { flex: 1 1 140px; min-width: 0; max-width: 24em; }
 .kg-knowledge-graph-view .kg-filter-select { max-width: 100%; }
+/* Obsidian's button display rule overrides the browser's hidden default. */
+.kg-knowledge-graph-view button[hidden] { display: none; }
+.kg-knowledge-graph-view .kg-graph-navigation {
+	display: flex;
+	align-items: center;
+	flex-wrap: wrap;
+	gap: 0.5em;
+	margin: 0.75em 0;
+}
+.kg-knowledge-graph-view .kg-graph-navigation .kg-graph-toggle { flex-basis: 100%; }
 .kg-graph-toggles { display: flex; flex-wrap: wrap; gap: 0.5em 1.25em; margin: 0.5em 0; }
 .kg-graph-toggle { display: inline-flex; gap: 0.4em; align-items: center; font-size: var(--font-ui-small); color: var(--text-muted); }
 .kg-graph-toggle input { margin: 0; }

@@ -7,10 +7,10 @@
  *   1. YAML frontmatter  → rdf:type from fileClass, source edges from source_ids
  *   2. Breadcrumbs-style inline fields in `## Connections`
  *      (source, requires, enables, related_to, up, down, same, next, prev)
- *   3. Wikilinks in the note body  → inferred links_to triples
+ *   3. Internal note links in prose → inferred links_to triples
  */
 
-import { App, MetadataCache, TFile, Vault } from 'obsidian';
+import { App, MetadataCache, TFile, Vault, type LinkCache } from 'obsidian';
 import { Triple, mergeDuplicates } from '../models/Triple';
 import { Provenance, createProvenance } from '../models/Provenance';
 import { SourceMap, isValidSourceId } from '../models/SourceId';
@@ -68,8 +68,8 @@ export class TripleExtractor {
 	 * confident version of each triple.
 	 */
 	async extract(file: TFile): Promise<Triple[]> {
-		const cache = this.metadataCache.getFileCache(file);
 		const content = await this.vault.cachedRead(file);
+		const cache = this.metadataCache.getFileCache(file);
 		const subject = file.path;
 		const baseProv = createProvenance(file.path, {
 			confidence: 0.9,
@@ -91,14 +91,12 @@ export class TripleExtractor {
 		}
 
 		// 2. Breadcrumbs inline fields in the Connections section.
-		const prose = stripInlineCode(stripCodeFences(stripFrontmatter(content)));
-		const connections = parseConnectionsSection(prose);
+		const prose = maskNonProse(stripFrontmatter(content));
+		const { connections, bodyText } = parseConnectionsSections(prose);
 		triples.push(...this.extractConnectionTriples(subject, connections, baseProv));
 
-		// 3. Body wikilinks (exclude code fences, frontmatter and the
-		//    Connections section so explicit breadcrumbs are not duplicated).
-		const bodyText = removeConnectionsSection(prose);
-		triples.push(...this.extractBodyLinkTriples(subject, bodyText, baseProv));
+		// 3. Infer unconsumed links; plain/unknown Connections lines remain prose.
+		triples.push(...this.extractBodyLinkTriples(subject, bodyText, baseProv, cache?.links));
 
 		return mergeDuplicates(triples);
 	}
@@ -218,9 +216,24 @@ export class TripleExtractor {
 	private extractBodyLinkTriples(
 		subject: string,
 		bodyText: string,
-		baseProv: Provenance
+		baseProv: Provenance,
+		cachedLinks?: LinkCache[]
 	): Triple[] {
-		const targets = extractWikilinks(bodyText);
+		// Native spans also cover reference-style links. Match them to the current
+		// content; supplement ordinary links when metadata indexing lags a read.
+		const nativeSpans: Array<{ start: number; end: number }> = [];
+		const targets = (cachedLinks ?? []).flatMap(link => {
+			const start = link.position.start.offset;
+			const end = link.position.end.offset;
+			if (isEscaped(bodyText, start) || bodyText.slice(start, end) !== link.original) return [];
+			nativeSpans.push({ start, end });
+			const target = internalTarget(link.link, !link.original.startsWith('[['));
+			return target === null ? [] : [target];
+		});
+		targets.push(...extractNoteLinks(bodyText)
+			.filter(link => !nativeSpans.some(span => link.start < span.end && link.end > span.start))
+			.map(link => link.target)
+			.filter((target): target is string => target !== null));
 		const seen = new Set<string>();
 		const out: Triple[] = [];
 		for (const raw of targets) {
@@ -234,7 +247,7 @@ export class TripleExtractor {
 					target,
 					createProvenance(baseProv.source, {
 						confidence: 0.6,
-						lineage: [...baseProv.lineage, 'inferred:wikilink'],
+						lineage: [...baseProv.lineage, 'inferred:note-link'],
 					}),
 					true
 				)
@@ -245,94 +258,142 @@ export class TripleExtractor {
 }
 
 /**
- * Parse the `## Connections` section into field-name → values.
- * Parsing stops at the next Markdown heading.
+ * Consume supported fields in each Connections section. Other lines remain
+ * available for inferred links, including unsupported inline-field names.
  */
-function parseConnectionsSection(text: string): Record<string, string[]> {
-	const sectionMatch = /^## Connections\s*$/im.exec(text);
-	if (!sectionMatch) return {};
-
-	const start = sectionMatch.index + sectionMatch[0].length;
-	const rest = text.slice(start);
-	const nextHeading = rest.search(/^#{1,6}\s/im);
-	const section = nextHeading === -1 ? rest : rest.slice(0, nextHeading);
-
-	const result: Record<string, string[]> = {};
-	for (const rawLine of section.split('\n')) {
-		const line = rawLine.trim();
-		if (!line || line.startsWith('>')) continue;
-
-		const inline = line.match(/^\s*([a-zA-Z0-9_]+)::\s*(.*)$/);
-		if (!inline) continue;
-
+function parseConnectionsSections(text: string): {
+	connections: Record<string, string[]>;
+	bodyText: string;
+} {
+	const connections: Record<string, string[]> = {};
+	let inConnections = false;
+	const bodyText = text.split('\n').map(line => {
+		if (/^ {0,3}#{1,6}[ \t]+/.test(line)) {
+			inConnections = /^ {0,3}##[ \t]+Connections[ \t]*(?:#+[ \t]*)?$/i.test(line);
+			return line;
+		}
+		if (!inConnections) return line;
+		const inline = line.match(/^ {0,3}(?:[-*+][ \t]+)?([a-zA-Z0-9_]+)::[ \t]*(.*)$/);
+		if (!inline || !BREADCRUMB_FIELDS.has(inline[1].toLowerCase())) return line;
 		const key = inline[1].toLowerCase();
-		if (!BREADCRUMB_FIELDS.has(key)) continue;
-
-		result[key] = (result[key] ?? []).concat(extractValues(inline[2]));
-	}
-	return result;
+		const values = extractValues(inline[2]);
+		connections[key] = (connections[key] ?? []).concat(values);
+		return maskText(line);
+	}).join('\n');
+	return { connections, bodyText };
 }
 
-/** Pull wikilink targets from text, ignoring display aliases. */
-function extractWikilinks(text: string): string[] {
-	const re = /\[\[(.*?)\]\]/g;
-	const out: string[] = [];
-	let match: RegExpExecArray | null;
-	while ((match = re.exec(text)) !== null) {
-		const target = match[1].split('|')[0].trim();
-		if (target) out.push(target);
+interface NoteLink { target: string | null; start: number; end: number }
+
+/** Minimal offline fallback when Obsidian's parsed link cache is unavailable. */
+function extractNoteLinks(text: string): NoteLink[] {
+	const links: NoteLink[] = [];
+	for (const match of text.matchAll(/\[\[([^\]\n]+)\]\]/g)) {
+		if (isEscaped(text, match.index)) continue;
+		links.push({ target: internalTarget(match[1].split('|')[0], false), start: match.index,
+			end: match.index + match[0].length });
 	}
-	return out;
+	const markdown = /(?<!!)\[[^\]\n]*\]\([ \t]*/g;
+	for (const match of text.matchAll(markdown)) {
+		if (isEscaped(text, match.index) || links.some(link => match.index >= link.start && match.index < link.end)) continue;
+		let cursor = match.index + match[0].length;
+		const angle = text[cursor] === '<';
+		if (angle) cursor++;
+		const destinationStart = cursor;
+		let depth = 0;
+		for (; cursor < text.length; cursor++) {
+			const char = text[cursor];
+			if (char === '\n') break;
+			if (char === '\\' && cursor + 1 < text.length && text[cursor + 1] !== '\n') { cursor++; continue; }
+			if (angle) { if (char === '>') break; }
+			else if (char === '(') depth++;
+			else if (char === ')') { if (!depth) break; depth--; }
+			else if (/\s/.test(char)) break;
+		}
+		if (depth || (angle && text[cursor] !== '>')) continue;
+		const destination = text.slice(destinationStart, cursor).replace(/\\([\\()<>])/g, '$1');
+		const suffixStart = angle ? cursor + 1 : cursor;
+		const suffix = text.slice(suffixStart).match(/^[ \t]*(?:(?:"[^"\n]*"|'[^'\n]*')[ \t]*)?\)/);
+		if (!suffix) continue;
+		links.push({ target: internalTarget(destination, true), start: match.index,
+			end: suffixStart + suffix[0].length });
+	}
+	return links.sort((a, b) => a.start - b.start);
+}
+
+function internalTarget(raw: string, markdown: boolean): string | null {
+	let target = raw.trim();
+	if (markdown) {
+		try { target = decodeURIComponent(target); } catch { /* Preserve malformed URI spelling for diagnostics. */ }
+	}
+	return !target || /^[a-z][a-z0-9+.-]*:|^\/\//i.test(target) ? null : target;
+}
+
+function isEscaped(text: string, start: number): boolean {
+	let backslashes = 0;
+	for (let index = start - 1; index >= 0 && text[index] === '\\'; index--) backslashes++;
+	return backslashes % 2 === 1;
 }
 
 /** Split a raw value string into individual target identifiers. */
 function extractValues(raw: string): string[] {
 	const text = raw.trim();
 	if (!text) return [];
-	const links = extractWikilinks(text);
-	const values = text.replace(/\[\[.*?\]\]/g, '')
-		.split(MULTI_VALUE_SEP)
-		.map((s) => s.trim())
-		.filter((s) => s.length > 0);
-	return links.concat(values);
+	const links = extractNoteLinks(text);
+	if (links.length === 0) {
+		// Escaped link markup is a literal example, never an unlinked identifier.
+		return text.split(MULTI_VALUE_SEP).map(value => value.trim())
+			.filter(value => value && !value.includes('[[') && !/\[[^\]]*\]\(/.test(value));
+	}
+	let remainder = text;
+	for (const link of [...links].reverse()) remainder = remainder.slice(0, link.start)
+		+ maskText(remainder.slice(link.start, link.end)) + remainder.slice(link.end);
+	// Rendered links can be joined by prose. Only standalone SRC IDs in the
+	// remaining list cells are identifiers; words such as "and" are not nodes.
+	const ids = remainder.split(MULTI_VALUE_SEP).map(value => value.trim()).filter(isValidSourceId);
+	return links.map(link => link.target).filter((target): target is string => target !== null).concat(ids);
 }
 
-/** Remove fenced code blocks so we do not extract links from examples. */
-function stripCodeFences(text: string): string {
-	let fence: { marker: string; length: number } | undefined;
-	return text.split('\n').map((line) => {
-		const delimiter = /^ {0,3}(`{3,}|~{3,})(.*)$/.exec(line);
-		if (fence) {
-			if (delimiter && delimiter[1][0] === fence.marker
-				&& delimiter[1].length >= fence.length && !delimiter[2].trim()) fence = undefined;
-			return '';
-		}
-		if (delimiter) {
-			fence = { marker: delimiter[1][0], length: delimiter[1].length };
-			return '';
-		}
-		return line;
-	}).join('\n');
-}
+/** Preserve offsets and newlines so indexed link positions remain usable. */
+function maskText(text: string): string { return text.replace(/[^\n\r]/g, ' '); }
 
-/** Backtick spans may use any matching run length and can cross line breaks. */
-function stripInlineCode(text: string): string {
-	return text.replace(/(?<!`)(`+)(?!`)([\s\S]*?)(?<!`)\1(?!`)/g,
-		(span) => span.replace(/[^\n]/g, ' '));
+/** Mask literal regions in source order so delimiters inside code/comments
+ * cannot change the interpretation of later prose. Offsets remain native. */
+function maskNonProse(text: string): string {
+	const tokens = /^ {0,3}(?:`{3,}|~{3,})[^\n]*|<!--|%%|`+/gm;
+	let output = '', cursor = 0;
+	let match: RegExpExecArray | null;
+	while ((match = tokens.exec(text)) !== null) {
+		const start = match.index;
+		if (isEscaped(text, start)) continue;
+		let end = start + match[0].length;
+		const fence = /^ {0,3}(`{3,}|~{3,})/.exec(match[0]);
+		if (fence && (start === 0 || text[start - 1] === '\n')) {
+			const close = new RegExp('^ {0,3}' + fence[1][0] + '{' + fence[1].length + ',}[ \t]*\r?$', 'gm');
+			close.lastIndex = end;
+			const closing = close.exec(text);
+			end = closing ? closing.index + closing[0].length : text.length;
+		} else if (match[0] === '<!--' || match[0] === '%%') {
+			const marker = match[0] === '<!--' ? '-->' : '%%';
+			const closing = text.indexOf(marker, end);
+			end = closing === -1 ? text.length : closing + marker.length;
+		} else {
+			// An unmatched inline delimiter is text, rather than an open code span.
+				const close = /`+/g;
+				close.lastIndex = end;
+				let closing = close.exec(text);
+				while (closing && closing[0].length !== match[0].length) closing = close.exec(text);
+			if (!closing) continue;
+			end = closing.index + closing[0].length;
+		}
+		output += text.slice(cursor, start) + maskText(text.slice(start, end));
+		cursor = end;
+		tokens.lastIndex = end;
+	}
+	return output + text.slice(cursor);
 }
 
 /** Remove the YAML frontmatter block at the top of a note. */
 function stripFrontmatter(text: string): string {
-	return text.replace(/^---\r?\n[\s\S]*?\r?\n---(?:\r?\n|$)/, '');
-}
-
-/** Remove the Connections section so its explicit links are not re-inferred. */
-function removeConnectionsSection(text: string): string {
-	const match = /^## Connections\s*$/im.exec(text);
-	if (!match) return text;
-	const start = match.index;
-	const rest = text.slice(start + match[0].length);
-	const nextHeading = rest.search(/^#{1,6}\s/im);
-	const end = nextHeading === -1 ? text.length : start + match[0].length + nextHeading;
-	return text.slice(0, start) + text.slice(end);
+	return text.replace(/^---\r?\n[\s\S]*?\r?\n---(?:\r?\n|$)/, maskText);
 }
