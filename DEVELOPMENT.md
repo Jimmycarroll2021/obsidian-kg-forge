@@ -13,7 +13,7 @@ npm run check
 
 - `tests/engine`: extraction, contextual source maps, schema checks, GraphRAG traversal/templates, Cypher serialization, and safe output writes.
 - `tests/settings.test.ts`: migration, independent defaults, ordered writes, and failed-write recovery.
-- `tests/ui`: preview/copy flow, stale async jobs, graph refresh, saved questions, retry-save state, and coverage invalidation.
+- `tests/ui`: preview/copy flow, stale async jobs, graph refresh, bounded graph/evidence paging, duplicate-name display, selected provenance, saved questions, retry-save state, and coverage invalidation.
 - `tests/integration`: actual sample Markdown through registered commands, duplicate-name caches, grounded prompts, repeated validation/exports, and first use without an index.
 
 Vitest runs in jsdom with a small Obsidian adapter at `tests/mocks/obsidian.ts` and an in-memory vault at `tests/helpers/vault.ts`. These tests exercise plugin logic and DOM interaction; they do not prove compatibility with the running Obsidian host. Keep mocks faithful to the API behaviour needed by each regression, and avoid simulating an unavailable platform as acceptance evidence.

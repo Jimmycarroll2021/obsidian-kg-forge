@@ -155,21 +155,21 @@ describe('Active-note graph and evidence list', () => {
 		const fixture = setup(); const view = new KnowledgeGraphView(fixture.leaf as never, fixture.plugin);
 		await view.onOpen();
 		expect(view.contentEl.textContent).toContain('concepts/Anchor.md');
-		expect(view.contentEl.querySelectorAll('.kg-triple-item').length).toBeGreaterThan(0);
+		expect(view.contentEl.querySelectorAll('.kg-map-node').length).toBeGreaterThan(0);
 		fixture.setActiveFile('concepts/Neighbour.md');
 		await vi.waitFor(() => expect(view.contentEl.querySelector('.kg-workflow-status')?.textContent).toMatch(/^concepts\/Neighbour.md ·/));
-		expect(view.contentEl.querySelector('.kg-subject')?.textContent).toBe('concepts/Neighbour.md');
+		expect(view.contentEl.querySelector('.kg-map-anchor')?.getAttribute('data-note-id')).toBe('concepts/Neighbour.md');
 		fixture.contents.set('concepts/Neighbour.md', '## Connections\nrequires:: [[concepts/Anchor]]');
 		fixture.app.metadataCache.trigger('changed', fixture.files.get('concepts/Neighbour.md'));
-		await vi.waitFor(() => expect([...view.contentEl.querySelectorAll('.kg-predicate')].map(el => el.textContent).join(' ')).toContain('requires'));
+		await vi.waitFor(() => expect([...view.contentEl.querySelectorAll('.kg-map-relation')].map(el => el.textContent).join(' ')).toContain('requires'));
 		fixture.setActiveFile(null);
-		expect(view.contentEl.querySelectorAll('.kg-triple-item')).toHaveLength(0);
+		expect(view.contentEl.querySelectorAll('.kg-map-node')).toHaveLength(0);
 		view.contentEl.querySelector('select')!.dispatchEvent(new Event('change'));
-		expect(view.contentEl.querySelectorAll('.kg-triple-item')).toHaveLength(0);
+		expect(view.contentEl.querySelectorAll('.kg-map-node')).toHaveLength(0);
 		fixture.app.vault.cachedRead.mockRejectedValueOnce(new Error('vault read failed'));
 		fixture.setActiveFile('concepts/Anchor.md');
 		await vi.waitFor(() => expect(view.contentEl.textContent).toContain('vault read failed'));
-		expect(view.contentEl.querySelectorAll('.kg-triple-item')).toHaveLength(0);
+		expect(view.contentEl.querySelectorAll('.kg-map-node')).toHaveLength(0);
 	});
 
 	it('discards a delayed extraction for the previous active note', async () => {
@@ -180,9 +180,9 @@ describe('Active-note graph and evidence list', () => {
 		const view = new KnowledgeGraphView(fixture.leaf as never, fixture.plugin); const opening = view.onOpen();
 		await vi.waitFor(() => expect(extract).toHaveBeenCalled());
 		fixture.setActiveFile('concepts/Neighbour.md');
-		await vi.waitFor(() => expect(view.contentEl.querySelector('.kg-subject')?.textContent).toBe(b.subject));
+		await vi.waitFor(() => expect(view.contentEl.querySelector('.kg-map-anchor')?.getAttribute('data-note-id')).toBe(b.subject));
 		pending.resolve([a]); await opening;
-		expect(view.contentEl.querySelector('.kg-subject')?.textContent).toBe(b.subject);
+		expect(view.contentEl.querySelector('.kg-map-anchor')?.getAttribute('data-note-id')).toBe(b.subject);
 	});
 
 	it('renders source identity and inference, and supports keyboard opening', () => {

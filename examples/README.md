@@ -14,3 +14,5 @@ Use Obsidian 1.13.0 or later. This fixture contains synthetic notes and no crede
 8. Disable/re-enable the plugin and repeat the persistence check. A lexical match is only a coverage hint; review the evidence to determine whether an answer is supported.
 
 For a separate first-use check, remove papers/index.md from the copied vault. Extraction and prompt generation should still work; source IDs remain unresolved and validation reports them.
+
+Open **Knowledge Forge: Open knowledge graph** with `concepts/Graph.md` active. The quiet default shows `Traversal` with a `requires` label and a `concept` badge on the active note. Source and inferred relationships appear only when you enable their toggles. Select `Traversal` and check its source evidence, then use **Open note** to open `concepts/Traversal.md`. Toggle sources to reveal the separate `papers/Graph.md` reference. Confirm that narrow panes stack the map and that keyboard selection keeps visible focus. The generated map covers the active note; it does not change Obsidian's built-in graph view.
