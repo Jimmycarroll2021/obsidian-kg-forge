@@ -1,6 +1,7 @@
-import { Notice, Plugin, TFile, normalizePath } from 'obsidian';
+import { Notice, Plugin, TFile } from 'obsidian';
 import { TripleExtractor } from '../engine/TripleExtractor';
 import { SourceMapLoader } from '../engine/SourceMapLoader';
+import { writeGeneratedFile } from '../engine/VaultFiles';
 import type { ForgeSettings } from '../settings';
 
 type PluginWithSettings = Plugin & { settings: ForgeSettings };
@@ -21,7 +22,9 @@ export function registerExtractTriplesCommand(plugin: Plugin): void {
 		name: COMMAND_NAME,
 		checkCallback: (checking: boolean) => {
 			const file = plugin.app.workspace.getActiveFile();
-			const canRun = file instanceof TFile && file.extension === 'md';
+			const canRun = file instanceof TFile && file.extension === 'md'
+				&& file.path !== (plugin as PluginWithSettings).settings.cacheFolder
+				&& !file.path.startsWith(`${(plugin as PluginWithSettings).settings.cacheFolder}/`);
 			if (!checking && canRun) {
 				extractTriplesFromActiveFile(plugin as PluginWithSettings).catch((err: Error) => {
 					console.error(`[KG Forge] ${COMMAND_NAME} failed`, err);
@@ -50,9 +53,9 @@ async function extractTriplesFromActiveFile(plugin: PluginWithSettings): Promise
 	const triples = await TripleExtractor.extractFromFile(file, plugin.app, sourceMap, settings);
 
 	// Persist to a per-note cache file for downstream commands and debugging.
-	const cachePath = normalizePath(`${settings.cacheFolder}/${safeFileName(file.basename)}.triples.json`);
 	const payload = JSON.stringify(
 		{
+			generator: 'kg-forge',
 			file: file.path,
 			extractedAt: Date.now(),
 			count: triples.length,
@@ -62,18 +65,8 @@ async function extractTriplesFromActiveFile(plugin: PluginWithSettings): Promise
 		2,
 	);
 
-	const existing = vault.getAbstractFileByPath(cachePath);
-	if (existing instanceof TFile) {
-		await vault.process(existing, () => payload);
-	} else {
-		await vault.create(cachePath, payload);
-	}
+	await writeGeneratedFile(vault, settings.cacheFolder, `${file.path}.triples.json`, payload);
 
 	new Notice(`KG Forge: extracted ${triples.length} triples from "${file.basename}"`);
-}
-
-/** Remove characters that could break a file path segment. */
-function safeFileName(name: string): string {
-	return name.replace(/[\\/:*?"<>|]/g, '_');
 }
 

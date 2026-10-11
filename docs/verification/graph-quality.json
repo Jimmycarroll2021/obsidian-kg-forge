@@ -1,0 +1,122 @@
+{
+  "status": "PASS",
+  "series": 1,
+  "sourceBaseline": "c4596bd47bba3051e44ee4e79f9ab6a59161911e",
+  "productIdentitySha256": "17dcc2ec120cdf5fca80cd30f1cb744db07dbb9dba75a79cceb6aba273e0cbf3",
+  "productSourceHashes": {
+    "esbuild.config.mjs": "db943c07c71e9748ace0d86dced7a601be48c6f52a739ca40d8e7aa634f8fcb0",
+    "manifest.json": "1fc6b859f2a98e69c5babba3ac861939d8a32e913230e67130840dcd5f16dd60",
+    "package-lock.json": "aeabc5e538f216e882c4e570b9a8c3a86c509a2e17d31367d878087adaeacdd5",
+    "package.json": "7db6947f310d7678eb4f2fff709811f4adcac8cfa3ed59798e37be3d9d29aae0",
+    "src/commands/buildGraphRAGPrompt.ts": "532614db33ead61841a2648ab831c596e2bcef5a74bf79ca681a41072f7ff651",
+    "src/commands/exportCypher.ts": "262d0f7964dc45d081531a75a318bbfe6e4a2004cb0e0b338f3afb52ba4458f8",
+    "src/commands/exportDataview.ts": "3d7967280f78be5af779586de090391bafe83d26b6dff2ed48e4cc9b18f6248c",
+    "src/commands/extractTriples.ts": "2f84204daf4f05a90ef7387700f51d5ff228fdd0cb9c806a1b6322493b5d0b5b",
+    "src/commands/index.ts": "575e6310dfc479767db098f6dc145bab0dfe92e2baa23463f75607961586ab51",
+    "src/commands/validateSchema.ts": "6735307527cb609f408f4cfbd1c812dbb218fb8042b197b241270ba3835e9afc",
+    "src/constants.ts": "5cec780991918337607d7102420e7de5b5ce43ecb73d4b65c6cce40346a398f0",
+    "src/engine/FolderMapping.ts": "8488dd4821a49e626d89b4bee2abfc6112d8ecec8984f47a9a1328a0a7ae5fcc",
+    "src/engine/GraphNeighbourhood.ts": "9603e3f1885810c5b3f1b0bad3f1942f33d926036638b2331e727dd26768a18e",
+    "src/engine/GraphRAGBuilder.ts": "b6ba25cbacc0b292ac72db4b14447dd5e22ce878f8d8ca3e91d67c1a05d6a373",
+    "src/engine/SchemaValidator.ts": "0abd106ead40807af3f7524bd3c62d2c7cb8800cbff6378d769119f1d6a6f819",
+    "src/engine/SourceMapLoader.ts": "8c61736a18bace73c59e7a02902b73e44f5d266f74be2c2ba4b1aa854e037847",
+    "src/engine/TripleExtractor.ts": "e7bbd86198ecb181b3f6d6937230143f035be7dafd98e5aa06fe4da8bd7dfabd",
+    "src/engine/VaultFiles.ts": "6f1010172c0c1b8f45171f125bc2208ff70e33ea3da0d78ed2ac491b04f647f3",
+    "src/main.ts": "0b0353f8c268bf32768780b68ea2961a2088654f6d88a7aaeed0ea06e54b6681",
+    "src/models/Provenance.ts": "2818a2558f6c23f8263b847e92e83eb46128b289f117bfb9c7cda5ee6a7d0a28",
+    "src/models/SourceId.ts": "e4cfb13826571fbba9b00c6aa661931d30062cc0536a3dca2b11b537332ea22e",
+    "src/models/Triple.ts": "ac2bf86b461d90e3e195e6c42bf65be18fabb8228d8167a530771c0de7b90e64",
+    "src/settings.ts": "7c3f08d2307ea9a82a3349f1dfa2fadef39b0ac95d3d2e8c01127f0a3e6fc7c4",
+    "src/types.ts": "b99103760c6c86d0316f56fda8511b0e8655fba85f3979d2531e22752f0e5a39",
+    "src/ui/CompetencyQuestionView.ts": "236afcf9872b96991796ec861e8c1b576d63cc5e41b55584bc24c596d596be2d",
+    "src/ui/GraphRAGPanel.ts": "865f5c52b94f9608fd98bd8251f3589b5976aa79c53615d91882c480971e3f28",
+    "src/ui/KnowledgeGraphView.ts": "9bfbaa654b0a2cbdbf45bc79f5d1183bbcb6f68032d1b75ee4e626875309bd55",
+    "src/ui/SettingsTab.ts": "200a76af177d66d8ed06179b131a726ed472dc1890e5f41aab2d0add06747e2b",
+    "src/ui/components/FocusedGraph.ts": "ae61e005467d8b6b5c042aadc47b6e21817f4bda51d35208b19ac7389b0206c9",
+    "src/ui/components/TripleList.ts": "d8f9f2e43be2d953bfbd47dfccdf6f658ad03e1b80abedc5ff9aa1356c56d644",
+    "src/ui/graphModel.ts": "d11584f310dd834dd00890a248db4009e4ea322014d04dbb72e6a6c8154ac5ad",
+    "src/ui/index.ts": "9853e6ab1bcabdfde83118fc5b203ba7529e061683b6fad92ad47ee2e907d265",
+    "src/ui/types.ts": "482b7f4def3da236fbd238cddfa1b1bbc1887d65c6b21dede6732c1454c6220c",
+    "styles.css": "aaef17d2e7cc149a95da475c1198de667f8e6726a2fb186957d0bcd85d17162c",
+    "tsconfig.json": "95a851b45f6b92051f5f22b3cefafeda20b2c71d369365c0048c8e516a7d691d"
+  },
+  "evaluatorSha256": "249f8dfc893a59315776bc6d1f23dd3d3800dbcde2f01b268153a2a05abdd464",
+  "contractSha256": "db9c2c20f034f2fd8f8a12d21b2e4edfb2f17ad9fd3459409915de7aa1cac4a3",
+  "lockfileSha256": "aeabc5e538f216e882c4e570b9a8c3a86c509a2e17d31367d878087adaeacdd5",
+  "progression": {
+    "baseline": 2,
+    "candidate-01-repair-02": 5,
+    "candidate-02-compat": 7,
+    "candidate-03-repair": 8,
+    "final-confirmation": 8
+  },
+  "projection": {
+    "facts": 5000,
+    "repetitions": 15,
+    "medianMs": 3.8493409999999812,
+    "maxMs": 5.698226000000091
+  },
+  "productionChecks": {
+    "tests": 110,
+    "testFiles": 15,
+    "lintWarnings": 0,
+    "typecheck": "pass",
+    "build": "pass"
+  },
+  "independentReviews": {
+    "E1-repair": 20,
+    "E1-mobile-lint-compat": 20,
+    "E2": 34,
+    "E3-repair": 55
+  },
+  "rawStore": "/tmp/forge-quality-series-az4j9d34",
+  "scopeLimits": [
+    "Synthetic projection timing is not native latency",
+    "Category leadership has not been benchmarked",
+    "Native mobile/otherOS and Neo4j execution unverified"
+  ],
+  "productCommit": "06b6aeb755b0296641313586ae2c2583fc105ad1",
+  "committedBuildReplay": {
+    "sourceCommit": "06b6aeb755b0296641313586ae2c2583fc105ad1",
+    "directory": "/tmp/forge-build-replay-nxwm30h1",
+    "runtimeHashes": {
+      "main.js": "2b18a3484415e06fc1fe2ac4e0c4db985f85cc37ff9cbae3085e1521275068de",
+      "styles.css": "aaef17d2e7cc149a95da475c1198de667f8e6726a2fb186957d0bcd85d17162c",
+      "manifest.json": "1fc6b859f2a98e69c5babba3ac861939d8a32e913230e67130840dcd5f16dd60"
+    },
+    "matchesNativeFrozenBundle": true,
+    "scope": "Fresh Git archive product build using installed lockfile dependencies; no additional test run"
+  },
+  "nativeFinal": {
+    "record": "native-final.json",
+    "receiptSha256": "9d3f0c19570f9f465138c107eddfb0df870315d673e44eec2d9f097d9295b346",
+    "host": {
+      "version": "1.14.4",
+      "electron": "43.7.7",
+      "chrome": "150.0.7871.250",
+      "release": "https://github.com/obsidianmd/obsidian-releases/releases/tag/v1.14.4",
+      "asset_sha256": "e70b7cd63787e7f798a84fec453f5c446b91877bd3f612e8fb98e9b76cc81120",
+      "mode": "Genuine native Linux Obsidian on owned Xvfb software display"
+    },
+    "checks": {
+      "original_workflows": {
+        "passed": 14,
+        "total": 14
+      },
+      "separate_extension": {
+        "passed": 14,
+        "total": 14
+      },
+      "frozen_native_product": {
+        "passed": 2,
+        "total": 2
+      }
+    },
+    "runtimeHashes": {
+      "main.js": "2b18a3484415e06fc1fe2ac4e0c4db985f85cc37ff9cbae3085e1521275068de",
+      "styles.css": "aaef17d2e7cc149a95da475c1198de667f8e6726a2fb186957d0bcd85d17162c",
+      "manifest.json": "1fc6b859f2a98e69c5babba3ac861939d8a32e913230e67130840dcd5f16dd60"
+    },
+    "cleanupVerified": true
+  }
+}

@@ -1,0 +1,105 @@
+{
+  "status": "PASS",
+  "host": "Standalone Chromium fixture with actual plugin source and mocked Obsidian APIs; not native Obsidian",
+  "fixtureDirectory": "/tmp/forge-graph-qa-eup0wtwu",
+  "checks": [
+    "quiet small default",
+    "keyboard selection and selected provenance",
+    "opt in source and inferred reveal",
+    "dense note limited to 12 of 103 explicit neighbours",
+    "disjoint next page",
+    "keyboard neighbour pager focus survives redraw",
+    "keyboard evidence pager bounded and focus preserved at both boundaries",
+    "duplicate names retain context and canonical IDs",
+    "unresolved target cannot open wrong note",
+    "predicate filter",
+    "420px layout stacked with no horizontal overflow",
+    "dark theme rendered",
+    "clear active note removes old map",
+    "no browser runtime errors"
+  ],
+  "geometry": {
+    "viewport": 420,
+    "scroll": 420,
+    "anchor": {
+      "x": 27,
+      "y": 518.140625,
+      "bottom": 644.796875
+    },
+    "branches": {
+      "x": 43,
+      "y": 658.796875
+    }
+  },
+  "paginationFocus": {
+    "tag": "BUTTON",
+    "label": "Neighbour next page"
+  },
+  "browserErrors": [],
+  "screenshots": {
+    "dense-light.png": "48c669594aa62144a17dd82baf94a9b3f58bea3392e9af3ccbcb996f3f6f6bb2",
+    "dense-narrow-dark.png": "fd7999b98ee7534fdd4beed55f6a1bf35ca4a6dc642361d707aa9d8cd26e98b7",
+    "dense-narrow.png": "1490f2fd7789ba4ddb29213b18da41a07ccbe71dae5b11ad03a60d37e3bbaca3",
+    "duplicates-light.png": "8eb18662f0f1a6e200621d268d3311f72fd787c590461f8b9d91fc857d612425",
+    "selected-light.png": "d7f0df6b43a81c8c10d139b96587722ffb4be084618bc0b24d19579ea7ebd361",
+    "small-dark.png": "2f7489e0ac00a90e7b1a9c59b8863d7368a329001bfd435eceb9827702a97a5e",
+    "small-light.png": "759a2d29f20164de67983ea6396f3a366f2b1ad12d7fad13ae4fb5d68d1f35d4"
+  },
+  "repositoryScreenshot": {
+    "path": "docs/images/focused-graph.png",
+    "sha256": "f48007b6958335a91bfdb72c6a5052c1ee90abcdd3851e36ff9e0ea192b97896"
+  },
+  "sourceHashes": {
+    "examples/sample-vault/algorithms/Shortest path.md": "dd9c2e61f0735f104fab8b94a9395894615834eb6a9b78db1d06729444249e95",
+    "examples/sample-vault/concepts/Graph.md": "6338b599a0a4b85455a2df1779f8a28134cf57eb4b180e92bd12d3d7faac9c26",
+    "examples/sample-vault/concepts/Isolated.md": "00b1506d895d1b0ace0c4f259724fffb54d2e0961cc091edae26286b2cbf4d6a",
+    "examples/sample-vault/concepts/Traversal.md": "d6ab1a6e89e57f1a0093dc3bcb4bd6cd150b12c32a3df179a1ecc4954383628f",
+    "examples/sample-vault/papers/Graph.md": "1cbb072aa1735c8fef66a9ac3f8dff8759778e11af838c39dc88877ef7da77fb",
+    "examples/sample-vault/papers/index.md": "49be32a4672ad3915746ecba8e6c39d334ff89e40c859dbd297ecf9334f4e58d",
+    "src/commands/buildGraphRAGPrompt.ts": "532614db33ead61841a2648ab831c596e2bcef5a74bf79ca681a41072f7ff651",
+    "src/commands/exportCypher.ts": "262d0f7964dc45d081531a75a318bbfe6e4a2004cb0e0b338f3afb52ba4458f8",
+    "src/commands/exportDataview.ts": "3d7967280f78be5af779586de090391bafe83d26b6dff2ed48e4cc9b18f6248c",
+    "src/commands/extractTriples.ts": "2f84204daf4f05a90ef7387700f51d5ff228fdd0cb9c806a1b6322493b5d0b5b",
+    "src/commands/index.ts": "575e6310dfc479767db098f6dc145bab0dfe92e2baa23463f75607961586ab51",
+    "src/commands/validateSchema.ts": "6735307527cb609f408f4cfbd1c812dbb218fb8042b197b241270ba3835e9afc",
+    "src/constants.ts": "5cec780991918337607d7102420e7de5b5ce43ecb73d4b65c6cce40346a398f0",
+    "src/engine/FolderMapping.ts": "8488dd4821a49e626d89b4bee2abfc6112d8ecec8984f47a9a1328a0a7ae5fcc",
+    "src/engine/GraphRAGBuilder.ts": "b6ba25cbacc0b292ac72db4b14447dd5e22ce878f8d8ca3e91d67c1a05d6a373",
+    "src/engine/SchemaValidator.ts": "0abd106ead40807af3f7524bd3c62d2c7cb8800cbff6378d769119f1d6a6f819",
+    "src/engine/SourceMapLoader.ts": "8c61736a18bace73c59e7a02902b73e44f5d266f74be2c2ba4b1aa854e037847",
+    "src/engine/TripleExtractor.ts": "91a7a4b25228e69dea18459b1fbb0ef6e6b735151591d3baf724a8420e1daa2d",
+    "src/engine/VaultFiles.ts": "6f1010172c0c1b8f45171f125bc2208ff70e33ea3da0d78ed2ac491b04f647f3",
+    "src/main.ts": "0b0353f8c268bf32768780b68ea2961a2088654f6d88a7aaeed0ea06e54b6681",
+    "src/models/Provenance.ts": "2818a2558f6c23f8263b847e92e83eb46128b289f117bfb9c7cda5ee6a7d0a28",
+    "src/models/SourceId.ts": "e4cfb13826571fbba9b00c6aa661931d30062cc0536a3dca2b11b537332ea22e",
+    "src/models/Triple.ts": "ac2bf86b461d90e3e195e6c42bf65be18fabb8228d8167a530771c0de7b90e64",
+    "src/settings.ts": "7c3f08d2307ea9a82a3349f1dfa2fadef39b0ac95d3d2e8c01127f0a3e6fc7c4",
+    "src/types.ts": "b99103760c6c86d0316f56fda8511b0e8655fba85f3979d2531e22752f0e5a39",
+    "src/ui/CompetencyQuestionView.ts": "236afcf9872b96991796ec861e8c1b576d63cc5e41b55584bc24c596d596be2d",
+    "src/ui/GraphRAGPanel.ts": "865f5c52b94f9608fd98bd8251f3589b5976aa79c53615d91882c480971e3f28",
+    "src/ui/KnowledgeGraphView.ts": "ac3a6bda821cd4237765080bd7ea89ec840e21b427d23c402538096af2db7d18",
+    "src/ui/SettingsTab.ts": "200a76af177d66d8ed06179b131a726ed472dc1890e5f41aab2d0add06747e2b",
+    "src/ui/components/FocusedGraph.ts": "c22f732117f828a623cad6651abe664f3ab2120118a2887b2c2218b7d4a78f9f",
+    "src/ui/components/TripleList.ts": "d8f9f2e43be2d953bfbd47dfccdf6f658ad03e1b80abedc5ff9aa1356c56d644",
+    "src/ui/graphModel.ts": "d11584f310dd834dd00890a248db4009e4ea322014d04dbb72e6a6c8154ac5ad",
+    "src/ui/index.ts": "9853e6ab1bcabdfde83118fc5b203ba7529e061683b6fad92ad47ee2e907d265",
+    "src/ui/types.ts": "482b7f4def3da236fbd238cddfa1b1bbc1887d65c6b21dede6732c1454c6220c",
+    "styles.css": "3a5fbf64f62bdf30338fa194e23ebd5014d6555b069701b8812c38bd7d487c90",
+    "tests/helpers/vault.ts": "39cd6e1af47afd2ffe7daf6abbceae0e1e805e86fb1f3fad7e7946a063d41b02",
+    "tests/mocks/obsidian.ts": "e702450ce4d020bac1efd2d4d2267dfbb25074ed0faa3aac23ad10400ae23474"
+  },
+  "fixtureHashes": {
+    "runner.ts": "dab27018f1dd7710306a15e2d170b2dcd74ca15ee630094030f02cfb47e0a69e",
+    "index.html": "6b97949f4cc5d4c6b51a49999c71e69c1b4de4a7846482fdcc9a0a49669e9e8e",
+    "vi.ts": "bde3917ddb3709fe95e27a98e4d7290c99ee30d9c586deced61b5513ae537266",
+    "check.mjs": "cc423028a6ed41a0a57596f08c86bd6fba408759a561495e05730f33d3d6a789",
+    "capture.mjs": "9673ef40513330ae564459c25b64b39adf2c5c06409b7a25ff21e9c1a3a7d502",
+    "bundle.js": "708e17907c2d288182118ff292011f813cc8f54275436d59d503705f65223116",
+    "plugin.css": "3a5fbf64f62bdf30338fa194e23ebd5014d6555b069701b8812c38bd7d487c90"
+  },
+  "history": {
+    "initialFocusFailure": "/tmp/forge-graph-qa-eup0wtwu/initial-pager-failure/result.json",
+    "independentFailingTests": "/tmp/forge-graph-independent-review-dafdzqch/review.test.ts",
+    "independentPassingTests": "/tmp/forge-graph-independent-rereview-6tsme9w_/review.test.ts"
+  }
+}

@@ -1,139 +1,120 @@
 # Knowledge Forge
 
-**Plugin ID:** `kg-forge`  
-**Package:** `obsidian-kg-forge`  
-**Author:** Jimmi (Jimmycarroll2021)  
-**License:** MIT
+Knowledge Forge is an offline Obsidian plugin for turning note relationships into typed triples, reviewing their sources, and preparing GraphRAG context. It works with ordinary Markdown, YAML frontmatter, and wikilinks. Breadcrumbs and Dataview are optional; no external service or model is called.
 
-Turn your Obsidian vault into a best-in-class knowledge graph workspace. KG Forge extracts typed **subject-predicate-object triples** from your notes, enforces **provenance** on every fact, and gives you graph-powered tools such as **GraphRAG prompts**, **schema validation**, and **competency-question tracking** — all local-first and offline.
+**Plugin ID:** `kg-forge` · **Minimum Obsidian:** 1.13.0 · **License:** MIT
 
-KG Forge is a **standalone** community plugin with **zero external plugin dependencies**. It reads the same markdown conventions used by tools like Breadcrumbs and Dataview, but does not require them to be installed.
+## What works
 
+- Extract subject–predicate–object relationships from `fileClass`, `source_ids`, repeated `## Connections` sections, and ordinary internal Markdown links or wikilinks.
+- Keep full vault paths as note identities, including notes with the same filename in different folders. Obsidian resolves aliases, headings, and relative links.
+- Inspect a focused relationship map around a note, including its indexed incoming relationships, refreshed when relevant notes or metadata change. Neighbours have compact names, directional relationship labels, and folder context when names collide. Select a neighbour for evidence and an explicit Open note action.
+- Build a GraphRAG prompt: choose an anchor, enter a question, set a radius of 0–5 relationship hops, generate a preview, inspect the evidence, and copy the displayed text. Shared class labels and unresolved targets cannot join unrelated notes. Prompts include at most 500 facts.
+- Validate folder/fileClass contracts and source IDs, including broken mapped targets. Nested folder mappings use the most specific match.
+- Export Cypher statements and Dataview query templates. Generated output folders are created automatically and excluded from plugin scans.
+- Save competency questions in plugin data. **Check coverage** reports lexical overlap with graph terms; it is a hint, not proof that a question is answerable. Editing a question clears its previous hint.
+
+Provenance identifies the originating note, capture time, extraction confidence, and lineage. Confidence values are extraction heuristics, not calibrated probabilities or independent verification of a claim. The plugin prepares context and renders a deterministic active-note map. Model answers require a separate tool or service.
+
+## Install from source
+
+Build outside your personal vault, then copy the three runtime files into a test vault first:
+
+The current workflow and graph upgrade is available on [draft PR #1](https://github.com/Jimmycarroll2021/obsidian-kg-forge/pull/1). Use its branch for this test build:
+
+```bash
+git clone https://github.com/Jimmycarroll2021/obsidian-kg-forge.git
+cd obsidian-kg-forge
+git checkout delivery/reliable-vault-workflow
+npm ci
+npm run check
+```
+
+Use Node.js 22 for development. Copy `main.js`, `manifest.json`, and `styles.css` to `<vault>/.obsidian/plugins/kg-forge/`. In Obsidian, enable **Knowledge Forge** under **Settings → Community plugins**. The development workflow is documented in [DEVELOPMENT.md](DEVELOPMENT.md).
+
+Alternatively, a repository release supplies those same runtime files. This repository does not imply that the plugin is listed in Obsidian's community directory.
+
+## First usable workflow
+
+Open a Markdown note and run **Knowledge Forge: Extract triples from current note**. A source index is optional: missing indexes do not stop extraction or prompt generation. Unresolved source IDs remain visible as IDs and produce validation warnings.
+
+This note shows the supported conventions:
+
+```markdown
 ---
-
-## What it does
-
-- **Extracts triples** from YAML frontmatter, Breadcrumbs-style `## Connections` fields, and wikilinks.
-- **Types every node** using folder → fileClass mappings (`algorithms/=algorithm`, `books/=book`, `concepts/=concept`, `papers/=paper`).
-- **Attaches provenance** to every triple: source, confidence, timestamp, and lineage.
-- **Validates the vault schema**: missing fileClass, malformed `source_ids`, missing provenance, broken source links.
-- **Builds GraphRAG prompts** from a k-hop subgraph of typed triples, serialized as bullet facts with a “say so if facts don’t support” guard.
-- **Exports** your graph as Neo4j Cypher `MERGE` statements or as Dataview query templates.
-- **Tracks Competency Questions** and checks whether the current schema can answer them.
-
+fileClass: concept
+source_ids:
+  - SRC-DEMO
 ---
+# Graph
 
-## Installation
+## Connections
+requires:: [[Traversal]]
+source:: SRC-DEMO
 
-### From source (development)
+## Notes
+See [[algorithms/Shortest path#Method|shortest paths]].
+```
 
-1. Clone or copy this repository into your vault’s `.obsidian/plugins/kg-forge/` folder.
-2. Install dependencies:
-   ```bash
-   npm install
-   ```
-3. Build the plugin:
-   ```bash
-   npm run build
-   ```
-4. In Obsidian, go to **Settings → Community plugins → Installed plugins**, enable **KG Forge**, and reload if prompted.
+Relationship fields supported inside `## Connections`: `up`, `down`, `same`, `next`, `prev`, `source`, `requires`, `enables`, and `related_to`. Ordinary body links, including internal Markdown links, become inferred `links_to` relationships. Unsupported/plain lines in Connections remain available as inferred links. Supported fields may repeat; joining two links with prose does not create an extra target. Comments, escaped examples, inline code and fenced code are excluded. An explicit `fileClass` takes precedence over folder inference; validation still reports a disagreement with the folder contract.
 
-### From Obsidian Community Plugins (when published)
+If you use source IDs, create an index at the configured **Source map path** (default `papers/index.md`):
 
-1. Open **Settings → Community plugins → Browse**.
-2. Search for **KG Forge**.
-3. Install and enable.
+```markdown
+| Source ID | Title | Target File | Wikilink |
+| --- | --- | --- | --- |
+| SRC-DEMO | Demo reference | papers/Graph.md | [[Graph|reference]] |
+```
 
----
+Links in the index resolve relative to the index note. A three-column table without a title also works when its headers identify Source ID, Target File, and Wikilink. IDs use `SRC-` followed by letters, digits, underscores, or hyphens. Empty target cells and aliases are preserved during parsing.
 
-## Quick start
-
-1. Open **Settings → KG Forge**.
-2. Confirm the folder → fileClass mappings match your vault (defaults: `algorithms`, `books`, `concepts`, `papers`).
-3. Set the path to your source map (default: `papers/index.md`).
-4. Open any note and run **KG Forge: Extract triples from current note**.
-5. Open the **Knowledge Forge Graph** view from the left ribbon or command palette to browse typed edges.
-6. Run **KG Forge: Build GraphRAG prompt** to copy a grounded prompt to your clipboard.
-
----
-
-## Permissions and privacy
-
-KG Forge is local-first and does not send data to remote services. The plugin does request the following capabilities:
-
-- **Vault enumeration:** Commands such as *Validate vault schema*, *Export triples as Cypher*, and *Build GraphRAG prompt* iterate over all markdown files in your vault to extract triples and build the graph. No file contents leave your device.
-- **Vault read/write:** The plugin reads note contents via Obsidian's API and writes cache, report, and export files to the configured cache folder (default `.kg-forge`).
-- **Clipboard access:** The *Build GraphRAG prompt* command copies the generated prompt to your system clipboard when you click **Copy to clipboard**.
-
-No telemetry, analytics, or network requests are performed by the plugin.
-
----
+Try [the sample vault](examples/README.md) for duplicate names, a linked neighbourhood, an isolated concept, and a deliberately unmapped source.
 
 ## Commands
 
-| Command | What it does |
+Obsidian prefixes these commands with **Knowledge Forge**.
+
+| Command | Result |
 | --- | --- |
-| **KG Forge: Extract triples from current note** | Parses the active note into triples and caches them. Shows a notice with the count. |
-| **KG Forge: Validate vault schema** | Scans the vault for schema violations and opens a report. |
-| **KG Forge: Build GraphRAG prompt** | Opens a modal to pick an anchor note and hop count, then copies the prompt. |
-| **KG Forge: Export triples as Cypher** | Exports the current vault triples to a `.cypher` file (node-then-edge `MERGE`). |
-| **KG Forge: Generate Dataview query templates** | Creates a note with Dataview query templates matching the master map. |
-| **KG Forge: Open Competency Questions** | Opens the CQ view to add, edit, and validate questions. |
-| **KG Forge: Open Knowledge Graph** | Opens the typed triple explorer / graph view. |
+| Extract triples from current note | JSON cache for the active source note |
+| Open knowledge graph | Focused active-note map with selected provenance |
+| Build graphrag prompt | Question, anchor, preview, evidence, and copy modal |
+| Validate vault schema | Markdown report opened in a new leaf |
+| Export triples as Cypher | Local `.cypher` export |
+| Generate Dataview query templates | Markdown query examples; running them requires Dataview |
+| Open competency questions | Persistent question collection and coverage hints |
 
----
+## Read a focused map
 
-## Supported edge types
+Run **Open knowledge graph** with a source note active. The map starts with explicit relationships and shows at most **12 neighbours per page**. It groups multiple relationships to the same note into one card. Classes appear as badges on the active note; source facts and inferred body links are hidden initially. Use **Show sources** and **Show inferred links** to reveal them. Counts distinguish hidden facts, filtered neighbours, and neighbours on other pages.
 
-The plugin understands the Breadcrumbs edge vocabulary used in the research vault:
+Search for a neighbour or choose a predicate to narrow the map. Select a card with the mouse or keyboard to inspect its provenance; evidence is paged separately at eight facts per page. **Centre in graph** explores that exact neighbour while keeping the editor on its current note. **Graph back** and **Graph forward** restore search, predicate, visibility, paging and selected evidence through up to 50 history entries. Exploration pins the map; enable **Follow active note** to return to the editor. **Open note** opens the exact target in the editor. Unresolved targets are marked and keep both actions disabled. Duplicate note names retain their folder context. The layout stacks in narrow panes and follows the Obsidian theme.
 
-| Predicate | Directionality | Meaning |
-| --- | --- | --- |
-| `rdf:type` / `type` | — | fileClass typing from folder mapping |
-| `source` | outgoing | derived from |
-| `requires` ↔ `enables` | inverse pair | prerequisite relationship |
-| `related_to` | symmetric | general association |
-| `up` ↔ `down` | inverse pair | hierarchy |
-| `same` | symmetric | peer equivalence |
-| `next` ↔ `prev` | inverse pair | sequence |
-| `links_to` | directed | linked by mention |
-| `source_id` | outgoing | maps `SRC-XXX` to paper path |
+![Focused knowledge graph in native Obsidian](docs/images/native-graph.png)
 
----
+*Actual bundled plugin in native Obsidian 1.14.4, using a disposable synthetic vault and a 300px dark pane. [Full native window](docs/images/native-graph-window.png) · [Graph navigation](docs/images/native-graph-navigation.png).*
 
-## Views
+The map reads its anchor, the configured source index and up to **100 indexed referring notes initially**. Obsidian’s resolved-link index supplies the candidate paths; only extracted relationships to the anchor enter the map. **Load more incoming notes** extends the limit by 100. Changed notes invalidate cached extraction, and the status reports unreadable notes as a partial map. It enumerates note paths without reading unrelated vault contents. Plain source IDs without native note links are outside this incoming index, so the status reports indexed notes rather than claiming a complete semantic graph. For a broader multi-hop neighbourhood in a prompt, use the GraphRAG command.
 
-- **Knowledge Forge Graph** (`ItemView`) — browse triples as typed edges, filter by predicate, and inspect provenance.
-- **GraphRAG Panel** — configure anchor + hops, preview the serialized subgraph, and copy the prompt.
-- **Competency Questions** — manage CQs and see which ones the current schema can answer.
+## Settings and generated files
 
----
+Default folder mappings are `algorithms=algorithm`, `books=book`, `concepts=concept`, and `papers=paper`. Change them for your vault's exact paths; nested mappings such as `research/papers=paper` are supported. A missing `fileClass` can be inferred for extraction and still appears as a schema error.
 
-## Compatibility
+The output folder defaults to `Knowledge Forge`, visible in Obsidian's file explorer. Hidden output paths are rejected because this workflow uses Obsidian's visible-file Vault API. The legacy default `.kg-forge` setting migrates to `Knowledge Forge`; old caches remain untouched. The plugin creates nested directories, rejects absolute paths and parent traversal, protects the Obsidian configuration directory, and refuses to replace an ordinary note at an output target. Use a dedicated output folder. Regenerating an artifact replaces edits made inside that generated artifact.
 
-- **Obsidian:** `1.13.0` and later.
-- **Runtime:** fully local; no network calls are required.
-- **Integrations:** designed to work alongside Dataview, Datacore, Metadata Menu, Juggl, Breadcrumbs, and Infranodus.
+| Artifact | Default path |
+| --- | --- |
+| Note cache | `Knowledge Forge/<full-note-path>.triples.json` |
+| Schema report | `Knowledge Forge/schema-validation-report.md` |
+| Cypher export | `Knowledge Forge/kg-forge-export.cypher` |
+| Dataview templates | `Knowledge Forge/dataview-queries.md` |
 
----
+Previously generated reports and exports can be updated. Existing basename-only caches remain on disk; new caches include the full source path so duplicate names stay separate. Cypher exports use canonical path IDs too: importing into an existing store that used basename IDs requires an explicit migration or a separate database to avoid retaining both identities.
 
-## Roadmap
+Questions and settings live in Obsidian's plugin `data.json`. A save failure is displayed and questions offer **Retry save**. Copying a GraphRAG prompt places selected vault content on your clipboard; you choose where to use it.
 
-- [ ] D3 / Canvas-based interactive force graph.
-- [ ] Infer missing triples with simple rule-based reasoning.
-- [ ] SHACL-style shape constraints.
-- [ ] SPARQL-like query builder.
-- [ ] Sync with external triple stores (Neo4j, RDFLib).
-- [ ] LLM-assisted extraction and CQ generation (opt-in, local models only).
+## Verification and contributions
 
----
+`npm run check` runs lint, TypeScript, regression tests, and the production bundle. Tests cover engine behaviour, safe outputs, persistence, UI lifecycles, and the sample-vault command journey. Obsidian APIs are mocked in automated tests. Native Obsidian 1.14.4 loading, rendering, metadata, desktop clipboard and persistence have also been tested in disposable vaults; see [the verification record](docs/VERIFICATION.md) for the exact builds and limits. Executing an export in Neo4j remains a separate check. See [the delivery record](docs/DELIVERY.md) for the repair scope and evidence.
 
-## Support & Contributing
-
-See [`DEVELOPMENT.md`](./DEVELOPMENT.md) for build instructions and contribution guidelines.
-
-For bugs or feature requests, open an issue with:
-- Obsidian version
-- Plugin version
-- Steps to reproduce
-- A sample note (if possible)
+Report bugs with the Obsidian/plugin version, steps to reproduce, and a small sample note without private content. Future work can build on this foundation: whole-vault graph exploration, semantic question evaluation, and opt-in model integration need their own acceptance criteria.
